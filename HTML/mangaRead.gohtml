@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link href="/static/styles.css" rel="stylesheet">
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+  <script src="/static/mangaReadScript.js" charset="utf-8"></script>
+  <title>{{.Name}} - Noname site</title>
+</head>
+  <body onload="start()">
+    <div class="Header">
+      <center>
+        <a href="/">
+          <span>Noname site ¯\_(ツ)_/¯</span>
+        </a>
+      </center>
+    </div>
+    <div class="Content">
+
+      <div class="Menu">
+        <div>
+          <a href="/manga/{{.Url}}">{{.Name}}</a>
+          <button id="size" type="button" name="buttonNext" onclick="changeImageSize()">Size</button>
+
+          <button id="layout" type="button" name="buttonNext">Layout</button>
+        </div>
+
+        <div>
+          <span>Chapter</span>
+          <select class="" name="" id="chapters" onchange="location = this.value;">
+            {{range $chapter := .Chapters}}
+            <option value="/manga/{{$.Url}}/{{$chapter.Number}}">{{$chapter.Name}}</option>
+            {{end}}
+          </select>
+        </div>
+
+        <div>
+          Page
+          <button type="button" name="buttonPrev" onclick="prevPage()">Prev</button>
+          <select class="" name="" id="pages" onchange="changePage(this.value)">
+            {{range $index, $image := .Images}}
+            <option value="{{$index}}">{{$index}}</option>
+            {{end}}
+          </select>
+          <button type="button" name="buttonNext" onclick="nextPage()">Next</button>
+        </div>
+
+      </div>
+
+      <div class="ImageDisplay">
+        <center>
+        {{range $index, $image := .Images}}
+        <img class="Image" id="image{{$index}}" src="http://localhost:8088/images/manga/{{$.Url}}/{{$.CurrentChapter}}/{{$image}}">
+        {{end}}
+      </center>
+      </div>
+    </div>
+    <div class="Footer">
+      <p>Copyrights and trademarks for the manga, ranobe and other
+        promotional materials are the property of their
+        respective owners. Use of these materials are allowed
+        under the fair use clause of the Copyright Law</p>
+    </div>
+  </body>
+</html>

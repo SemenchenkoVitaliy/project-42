@@ -1,0 +1,152 @@
+* {
+    box-sizing: border-box;
+}
+html, body, div, span, h1, h2, h3, h4, h5, h6, p, a, ul, li {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    font-size: 100%;
+    vertical-align: baseline;
+}
+body {
+  background-color: #f4f4f4;
+}
+.Header{
+  border: 1px solid #888;
+  border-radius: 10px;
+  padding: 5px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  background-color: white;
+  font-size: 20px;
+}
+.Header a{
+  margin: 10px;
+  margin-right: 0px;
+  text-decoration: none;
+  color: black;
+}
+.Footer{
+  font-size: 12px;
+  text-align: center;
+}
+
+.Content{
+  border: 1px solid #888;
+  border-radius: 10px;
+  padding: 5px;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  background-color: white;
+}
+
+.Content a{
+  margin: 10px;
+  margin-right: 0px;
+  text-decoration: none;
+  color: black;
+}
+
+.SectionName{
+  border: 1px solid #888;
+  border-radius: 10px;
+  padding: 5px;
+  margin-top: 10px;
+  background-color: white;
+  text-align: center;
+  margin: 10px;
+}
+
+.Section{
+  overflow: hidden;
+}
+
+.Product {
+  border: 1px solid #888;
+  border-radius: 10px;
+  padding: 5px;
+  margin: 10px;
+  background-color: white;
+  width: 310px;
+  height: 450px;
+  display: inline-block;
+  float:left;
+}
+
+.Product img{
+  display: none;
+  max-width: 300px;
+  max-height: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.Product p{
+  text-align: center;
+}
+
+.Product a{
+  margin: 0px;
+}
+
+.Info {
+  padding: 5px;
+  margin: 10px;
+  background-color: white;
+  width: 310px;
+  max-height: 430px;
+  display: inline-block;
+}
+
+.Info p{
+  border: 1px solid #888;
+  border-radius: 10px;
+  text-align: center;
+  margin: 20px;
+  padding: 10px;
+}
+
+.Chapters{
+  border: 1px solid #888;
+  border-radius: 10px;
+  padding: 5px;
+  margin: 10px;
+  background-color: white;
+  max-width: 700px;
+}
+
+.Chapters p{
+  margin: 10px;
+  text-align: center;
+}
+
+.Chapters ul{
+  list-style-type: none;
+}
+
+.Menu {
+  font-size: 17px;
+  border: 1px solid #888;
+  border-radius: 10px;
+  padding: 5px;
+  margin: 10px;
+  background-color: white;
+}
+
+.Menu select, button{
+  min-width: 60px;
+  height: 25px;
+  border-radius: 3px;
+  font-size: 15px;
+  border: 1px solid #888;
+  background-color: white;
+}
+
+.Menu div{
+  display: inline;
+}
+
+.ImageDisplay img{
+  display: none;
+  width: auto;
+}

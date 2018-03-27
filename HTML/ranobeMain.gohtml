@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link href="/static/styles.css" rel="stylesheet">
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+  <script src="/static/mainScript.js" charset="utf-8"></script>
+  <title>Noname site</title>
+</head>
+  <body onload="start()">
+    <div class="Header">
+      <center>
+        <a href="/">
+          <span>Noname site ¯\_(ツ)_/¯</span>
+        </a>
+      </center>
+    </div>
+
+    <div class="Content">
+
+      <div class="SectionName">
+        <a href="/ranobe">Ranobe</a>
+      </div>
+
+      <div class="Section">
+        {{range $key := .}}
+          <div class="Product">
+            <a href="/ranobe/{{$key.Url}}">
+            {{range $title := $key.Titles}}<img src="{{$title}}" alt="">{{end}}
+            <p>{{$key.Name}}</p>
+            </a>
+          </div>
+        {{end}}
+      </div>
+
+    </div>
+
+    <div class="Footer">
+      <p>Copyrights and trademarks for the manga, ranobe and other
+        promotional materials are the property of their
+        respective owners. Use of these materials are allowed
+        under the fair use clause of the Copyright Law</p>
+    </div>
+  </body>
+</html>

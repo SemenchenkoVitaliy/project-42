@@ -1,0 +1,22 @@
+{
+  "http": {
+    "host": "127.0.0.1",
+    "port": 8000
+  },
+  "ftp": {
+    "host": "127.0.0.1",
+    "port": 8088
+  },
+  "tcp": {
+    "host": "127.0.0.1",
+    "port": 8081
+  },
+  "db": {
+    "host": "127.0.0.1",
+    "port": 27017
+  },
+  "serverType": "http",
+  "srcDir": "/home/vitaliy/Documents/Sources",
+  "logsDir": "./logs",
+  "bufferSize": 1024
+}
