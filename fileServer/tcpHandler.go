@@ -10,7 +10,7 @@ import (
 	"os"
 	"strings"
 
-	"project-42/common"
+	"github.com/SemenchenkoVitaliy/project-42/common"
 )
 
 type urlFile struct {

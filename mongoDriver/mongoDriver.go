@@ -2,12 +2,13 @@ package mongoDriver
 
 import (
 	"fmt"
+	"os"
 	"time"
 
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 
-	"project-42/common"
+	"github.com/SemenchenkoVitaliy/project-42/common"
 )
 
 type MangaImage struct {
@@ -57,7 +58,12 @@ var (
 func init() {
 	session, err := mgo.Dial(fmt.Sprintf("%v:%v", common.Config.Db.Host, common.Config.Db.Port))
 	if err != nil {
-		common.CreateLog(err, "Starting MongoDB session")
+		common.CreateLog(err, "start MongoDB session")
+		os.Exit(1)
+	}
+	if err := session.DB(common.Config.Db.DbName).Login(common.Config.Db.User, common.Config.Db.Password); err != nil {
+		common.CreateLog(err, "authenticate MongoDB session")
+		os.Exit(1)
 	}
 
 	session.SetMode(mgo.Monotonic, true)
@@ -159,11 +165,11 @@ func AddMangaTitle(mangaUrl, titleName string) error {
 	return mangaCollection.Update(bson.M{"url": mangaUrl}, bson.M{"$push": bson.M{"titles": titleName}})
 }
 
-func RemMangaTitle(mangaUrl, titleName string) error {
+func RemoveMangaTitle(mangaUrl, titleName string) error {
 	return mangaCollection.Update(bson.M{"url": mangaUrl}, bson.M{"$pull": bson.M{"titles": titleName}})
 }
 
-func RemMangaChap(mangaUrl, chapNumber int) error {
+func RemoveMangaChapter(mangaUrl string, chapNumber int) error {
 	err := mangaCollection.Update(bson.M{"url": mangaUrl}, bson.M{"$pull": bson.M{"chapters": bson.M{"number": chapNumber}}})
 	if err != nil {
 		return err
@@ -177,6 +183,6 @@ func ChangeMangaName(mangaUrl, name string) error {
 	return mangaCollection.Update(bson.M{"url": mangaUrl}, bson.M{"$set": bson.M{"name": name}})
 }
 
-func ChangeMangaChapName(mangaUrl, chap, chapNumber string) error {
-	return mangaCollection.Update(bson.M{"url": mangaUrl, "chapters.number": chapNumber}, bson.M{"$set": bson.M{"chapters.$.name": chapNumber}})
+func ChangeMangaChapName(mangaUrl string, chapNumber int, chapName string) error {
+	return mangaCollection.Update(bson.M{"url": mangaUrl, "chapters.number": chapNumber}, bson.M{"$set": bson.M{"chapters.$.name": chapName}})
 }

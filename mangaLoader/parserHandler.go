@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	dbDriver "project-42/mongoDriver"
+	dbDriver "github.com/SemenchenkoVitaliy/project-42/mongoDriver"
 )
 
 func parseMangaType0(url string) dbDriver.Manga {

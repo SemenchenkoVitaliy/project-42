@@ -1,7 +1,7 @@
 package main
 
 import (
-	"project-42/fileServer"
+	"github.com/SemenchenkoVitaliy/project-42/fileServer"
 )
 
 func main() {

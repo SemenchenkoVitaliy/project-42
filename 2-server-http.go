@@ -1,7 +1,7 @@
 package main
 
 import (
-	"project-42/httpServer"
+	"github.com/SemenchenkoVitaliy/project-42/httpServer"
 )
 
 func main() {

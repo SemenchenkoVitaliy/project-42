@@ -1,10 +1,11 @@
 package mangaLoader
 
 import (
+	"fmt"
 	"strconv"
 
-	"project-42/fsApi"
-	dbDriver "project-42/mongoDriver"
+	"github.com/SemenchenkoVitaliy/project-42/fsApi"
+	dbDriver "github.com/SemenchenkoVitaliy/project-42/mongoDriver"
 )
 
 func LoadChapter(url, dir string) []string {
@@ -27,7 +28,9 @@ func LoadManga(mangaName string) error {
 	if err != nil {
 		return err
 	}
-
+	if manga.SrcUrl == "" {
+		return fmt.Errorf("No source url")
+	}
 	chapters := parseChapters(manga.SrcUrl)[manga.Size:]
 	var curDir string
 

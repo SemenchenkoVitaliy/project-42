@@ -14,11 +14,18 @@ type serverConn struct {
 	Port int
 }
 
+type dbConn struct {
+	serverConn
+	DbName   string
+	User     string
+	Password string
+}
+
 type Conf struct {
 	Http serverConn
 	Ftp  serverConn
 	Tcp  serverConn
-	Db   serverConn
+	Db   dbConn
 
 	ServerType string
 	SrcDir     string

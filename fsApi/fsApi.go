@@ -6,7 +6,7 @@ import (
 	"net"
 	"os"
 
-	"project-42/common"
+	"github.com/SemenchenkoVitaliy/project-42/common"
 )
 
 var conn net.Conn
@@ -55,16 +55,16 @@ func MkDir(path string) error {
 }
 
 func LoadFiles(arr []UrlFile) error {
-  data, err := json.Marshal(arr)
-  if err != nil {
-    return err
-  }
+	data, err := json.Marshal(arr)
+	if err != nil {
+		return err
+	}
 
-  respType, respData := sendData(1, data)
-  if respType == 0 {
-    return nil
-  }
-  return fmt.Errorf(respData)
+	respType, respData := sendData(1, data)
+	if respType == 0 {
+		return nil
+	}
+	return fmt.Errorf(respData)
 }
 
 func WriteFile(path string, rawData []byte) error {

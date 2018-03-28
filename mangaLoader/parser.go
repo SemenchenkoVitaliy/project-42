@@ -3,7 +3,7 @@ package mangaLoader
 import (
 	"strings"
 
-	dbDriver "project-42/mongoDriver"
+	dbDriver "github.com/SemenchenkoVitaliy/project-42/mongoDriver"
 )
 
 type MangaChapter struct {
