@@ -3,6 +3,7 @@ package mongoDriver
 import (
 	"fmt"
 	"os"
+	"sort"
 	"time"
 
 	"gopkg.in/mgo.v2"
@@ -49,10 +50,36 @@ type Ranobe struct {
 	Chapters []RanobeChapter
 }
 
+type cacheStruct struct {
+	Cache map[string]map[int][]string
+}
+
+func (c *cacheStruct) Add(manga string, chapter int, images []string) {
+	if _, ok := c.Cache[manga]; !ok {
+		c.Cache[manga] = make(map[int][]string)
+	}
+	sort.Strings(images)
+	c.Cache[manga][chapter] = images
+}
+
+func (c *cacheStruct) Find(manga string, chapter int) ([]string, bool) {
+	if _, ok := c.Cache[manga]; ok {
+		if _, ok = c.Cache[manga][chapter]; ok {
+			return c.Cache[manga][chapter], true
+		}
+	}
+	return []string{}, false
+}
+
+func (c *cacheStruct) Remove(manga string) {
+	delete(c.Cache, manga)
+}
+
 var (
 	session               *mgo.Session
 	mangaCollection       *mgo.Collection
 	mangaImagesCollection *mgo.Collection
+	imageCache            cacheStruct
 )
 
 func init() {
@@ -70,6 +97,8 @@ func init() {
 
 	mangaCollection = session.DB("gotest").C("mangalist")
 	mangaImagesCollection = session.DB("gotest").C("mangaimages")
+
+	imageCache.Cache = make(map[string]map[int][]string)
 }
 
 func GetMangaAll() []Manga {
@@ -100,10 +129,15 @@ func GetMangaImages(mangaUrl string, chapter int) []string {
 	var structImages []MangaImage
 	stringImages := []string{}
 
-	mangaImagesCollection.Find(bson.M{"manga": mangaUrl, "number": chapter}).Sort("image").Select(bson.M{"image": 1}).All(&structImages)
+	stringImages, ok := imageCache.Find(mangaUrl, chapter)
+	if !ok {
+		mangaImagesCollection.Find(bson.M{"manga": mangaUrl, "number": chapter}).Sort("image").All(&structImages)
 
-	for _, image := range structImages {
-		stringImages = append(stringImages, image.Image)
+		for _, image := range structImages {
+			stringImages = append(stringImages, image.Image)
+		}
+
+		imageCache.Add(mangaUrl, chapter, stringImages)
 	}
 
 	return stringImages
@@ -129,6 +163,7 @@ func RemoveManga(mangaUrl string) error {
 		return err
 	}
 	err = mangaImagesCollection.Remove(bson.M{"manga": mangaUrl})
+	imageCache.Remove(mangaUrl)
 	return err
 }
 
@@ -150,6 +185,8 @@ func AddMangaChapter(name string, chapter MangaChapter, images []string) error {
 	if err != nil {
 		return err
 	}
+
+	imageCache.Add(name, chapter.Number, images)
 
 	for _, image := range images {
 		err = mangaImagesCollection.Insert(MangaImage{Manga: name, Number: chapter.Number, Image: image})
@@ -176,6 +213,7 @@ func RemoveMangaChapter(mangaUrl string, chapNumber int) error {
 	}
 
 	err = mangaImagesCollection.Remove(bson.M{"manga": mangaUrl, "number": chapNumber})
+	imageCache.Remove(mangaUrl)
 	return err
 }
 
