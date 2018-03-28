@@ -178,7 +178,8 @@ func apiGetMain(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiGetMangaMain(w http.ResponseWriter, r *http.Request) {
-	data := processMangaTitles(dbDriver.GetMangaAll())
+	data := dbDriver.GetMangaAllMin()
+
 	stringifiedData, err := json.Marshal(data)
 	if err != nil {
 		common.CreateLog(err, "JSON convert in apiGetMangaMain"+mux.Vars(r)["name"])
@@ -217,18 +218,8 @@ func apiGetMangaRead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	manga, err := dbDriver.GetManga(mux.Vars(r)["name"])
-	if err != nil {
-		common.CreateLog(err, "Manga database request of "+mux.Vars(r)["name"])
-		http.Error(w, err.Error(), 500)
-		return
-	}
+	data := dbDriver.GetMangaImages(mux.Vars(r)["name"], chapNumber)
 
-	data := readMangaData{
-		Manga:          processSingleMangaTitles(manga),
-		Images:         dbDriver.GetMangaImages(mux.Vars(r)["name"], chapNumber),
-		CurrentChapter: chapNumber,
-	}
 	stringifiedData, err := json.Marshal(data)
 	if err != nil {
 		common.CreateLog(err, "JSON convert in apiGetMangaRead"+mux.Vars(r)["name"])

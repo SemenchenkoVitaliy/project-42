@@ -3,7 +3,6 @@ package mongoDriver
 import (
 	"fmt"
 	"os"
-	"sort"
 	"time"
 
 	"gopkg.in/mgo.v2"
@@ -21,6 +20,14 @@ type MangaImage struct {
 type MangaChapter struct {
 	Name   string
 	Number int
+}
+
+type MangaMin struct {
+	Size    int
+	Url     string
+	Name    string
+	AddDate time.Time
+	UpdDate time.Time
 }
 
 type Manga struct {
@@ -50,36 +57,12 @@ type Ranobe struct {
 	Chapters []RanobeChapter
 }
 
-type cacheStruct struct {
-	Cache map[string]map[int][]string
-}
-
-func (c *cacheStruct) Add(manga string, chapter int, images []string) {
-	if _, ok := c.Cache[manga]; !ok {
-		c.Cache[manga] = make(map[int][]string)
-	}
-	sort.Strings(images)
-	c.Cache[manga][chapter] = images
-}
-
-func (c *cacheStruct) Find(manga string, chapter int) ([]string, bool) {
-	if _, ok := c.Cache[manga]; ok {
-		if _, ok = c.Cache[manga][chapter]; ok {
-			return c.Cache[manga][chapter], true
-		}
-	}
-	return []string{}, false
-}
-
-func (c *cacheStruct) Remove(manga string) {
-	delete(c.Cache, manga)
-}
-
 var (
 	session               *mgo.Session
 	mangaCollection       *mgo.Collection
 	mangaImagesCollection *mgo.Collection
-	imageCache            cacheStruct
+	imageCache            mangaImgCache
+	mangaCache            mangCache
 )
 
 func init() {
@@ -99,12 +82,21 @@ func init() {
 	mangaImagesCollection = session.DB("gotest").C("mangaimages")
 
 	imageCache.Cache = make(map[string]map[int][]string)
+	mangaCache.Cache = make(map[string]Manga)
 }
 
 func GetMangaAll() []Manga {
 	var manga []Manga
 
-	mangaCollection.Find(bson.M{}).Sort("url").All(&manga)
+	mangaCollection.Find(bson.M{}).Sort("url").Select(bson.M{"chapters": 0}).All(&manga)
+
+	return manga
+}
+
+func GetMangaAllMin() []MangaMin {
+	var manga []MangaMin
+
+	mangaCollection.Find(bson.M{}).Sort("url").Select(bson.M{"chapters": 0, "titles": 0, "srcUrl": 0}).All(&manga)
 
 	return manga
 }
@@ -120,9 +112,15 @@ func GetRanobeAll() []Ranobe {
 func GetManga(mangaUrl string) (Manga, error) {
 	var manga Manga
 
-	err := mangaCollection.Find(bson.M{"url": mangaUrl}).One(&manga)
-
-	return manga, err
+	manga, ok := mangaCache.Find(mangaUrl)
+	if !ok {
+		err := mangaCollection.Find(bson.M{"url": mangaUrl}).One(&manga)
+		if err != nil {
+			return manga, err
+		}
+		mangaCache.Add(manga)
+	}
+	return manga, nil
 }
 
 func GetMangaImages(mangaUrl string, chapter int) []string {
@@ -151,6 +149,7 @@ func AddManga(manga Manga) error {
 
 	if num == 0 {
 		mangaCollection.Insert(&manga)
+		mangaCache.Add(manga)
 		return nil
 	} else {
 		return fmt.Errorf("manga is already added")
@@ -158,7 +157,9 @@ func AddManga(manga Manga) error {
 }
 
 func RemoveManga(mangaUrl string) error {
+	mangaCache.Remove(mangaUrl)
 	err := mangaCollection.Remove(bson.M{"url": mangaUrl})
+
 	if err != nil {
 		return err
 	}
@@ -175,6 +176,8 @@ func AddMangaChapter(name string, chapter MangaChapter, images []string) error {
 	if err != nil {
 		return err
 	}
+
+	mangaCache.Remove(name)
 
 	err = mangaCollection.Update(findQuery, bson.M{"$push": bson.M{"chapters": chapter}})
 	if err != nil {
@@ -199,14 +202,17 @@ func AddMangaChapter(name string, chapter MangaChapter, images []string) error {
 }
 
 func AddMangaTitle(mangaUrl, titleName string) error {
+	mangaCache.Remove(mangaUrl)
 	return mangaCollection.Update(bson.M{"url": mangaUrl}, bson.M{"$push": bson.M{"titles": titleName}})
 }
 
 func RemoveMangaTitle(mangaUrl, titleName string) error {
+	mangaCache.Remove(mangaUrl)
 	return mangaCollection.Update(bson.M{"url": mangaUrl}, bson.M{"$pull": bson.M{"titles": titleName}})
 }
 
 func RemoveMangaChapter(mangaUrl string, chapNumber int) error {
+	mangaCache.Remove(mangaUrl)
 	err := mangaCollection.Update(bson.M{"url": mangaUrl}, bson.M{"$pull": bson.M{"chapters": bson.M{"number": chapNumber}}})
 	if err != nil {
 		return err
@@ -218,9 +224,11 @@ func RemoveMangaChapter(mangaUrl string, chapNumber int) error {
 }
 
 func ChangeMangaName(mangaUrl, name string) error {
+	mangaCache.Remove(mangaUrl)
 	return mangaCollection.Update(bson.M{"url": mangaUrl}, bson.M{"$set": bson.M{"name": name}})
 }
 
 func ChangeMangaChapName(mangaUrl string, chapNumber int, chapName string) error {
+	mangaCache.Remove(mangaUrl)
 	return mangaCollection.Update(bson.M{"url": mangaUrl, "chapters.number": chapNumber}, bson.M{"$set": bson.M{"chapters.$.name": chapName}})
 }
