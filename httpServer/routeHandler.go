@@ -19,6 +19,7 @@ import (
 )
 
 var mangaTitlesUrl string = fmt.Sprintf("http://%v:%v/images/mangaTitles/", common.Config.Ftp.Host, common.Config.Ftp.Port)
+var mangaImagesUrl string = fmt.Sprintf("http://%v:%v/images/manga/", common.Config.Ftp.Host, common.Config.Ftp.Port)
 
 type mainData struct {
 	Manga  []dbDriver.Manga
@@ -29,6 +30,7 @@ type readMangaData struct {
 	dbDriver.Manga
 	Images         []string
 	CurrentChapter int
+	ImageHost      string
 }
 
 type htmlTemplates struct {
@@ -151,6 +153,7 @@ func httpMangaRead(w http.ResponseWriter, r *http.Request) {
 		Manga:          processSingleMangaTitles(manga),
 		Images:         dbDriver.GetMangaImages(mux.Vars(r)["name"], chapNumber),
 		CurrentChapter: chapNumber,
+		ImageHost:      mangaImagesUrl,
 	}
 
 	err = templates.MangaRead.Execute(w, data)
@@ -219,6 +222,10 @@ func apiGetMangaRead(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := dbDriver.GetMangaImages(mux.Vars(r)["name"], chapNumber)
+	for index, image := range data {
+
+		data[index] = fmt.Sprintf("%v%v/%v/%v", mangaImagesUrl, mux.Vars(r)["name"], mux.Vars(r)["chapter"], image)
+	}
 
 	stringifiedData, err := json.Marshal(data)
 	if err != nil {
