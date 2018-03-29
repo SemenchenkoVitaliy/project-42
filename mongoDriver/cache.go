@@ -35,12 +35,38 @@ type mangCache struct {
 }
 
 func (c *mangCache) Add(manga Manga) {
-	c.Cache[manga.Url] = manga
+	titles := []string{}
+	chapters := []MangaChapter{}
+	titles = append(titles, manga.Titles...)
+	chapters = append(chapters, manga.Chapters...)
+
+	c.Cache[manga.Url] = Manga{
+		Size:     manga.Size,
+		Url:      manga.Url,
+		Name:     manga.Name,
+		SrcUrl:   manga.SrcUrl,
+		Titles:   titles,
+		AddDate:  manga.AddDate,
+		UpdDate:  manga.UpdDate,
+		Chapters: chapters,
+	}
 }
 
-func (c *mangCache) Find(name string) (Manga, bool) {
+func (c mangCache) Find(name string) (Manga, bool) {
 	if _, ok := c.Cache[name]; ok {
-		return c.Cache[name], true
+		result := Manga{
+			Size:     c.Cache[name].Size,
+			Url:      c.Cache[name].Url,
+			Name:     c.Cache[name].Name,
+			SrcUrl:   c.Cache[name].SrcUrl,
+			Titles:   []string{},
+			AddDate:  c.Cache[name].AddDate,
+			UpdDate:  c.Cache[name].UpdDate,
+			Chapters: []MangaChapter{},
+		}
+		result.Titles = append(result.Titles, c.Cache[name].Titles...)
+		result.Chapters = append(result.Chapters, c.Cache[name].Chapters...)
+		return result, true
 	}
 	return Manga{}, false
 }
