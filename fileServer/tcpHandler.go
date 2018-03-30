@@ -83,7 +83,7 @@ func processData(reqType uint8, reqData string) (uint8, string) {
 		return 1, "server does not support such command"
 	}
 
-	return 0, ""
+	return 0, "ok"
 }
 
 func handleRequest(conn net.Conn) {

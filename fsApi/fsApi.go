@@ -46,8 +46,6 @@ func sendData(reqType uint8, reqData []byte) (uint8, string) {
 
 func MkDir(path string) error {
 	respType, respData := sendData(0, []byte(path))
-	fmt.Println(respType)
-	fmt.Println(respData)
 	if respType == 0 {
 		return nil
 	}
