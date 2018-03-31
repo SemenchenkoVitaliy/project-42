@@ -276,7 +276,7 @@ func apiChangeMangaMain(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	apiChangeMangaInfo(w, r)
+	apiGetMangaMain(w, r)
 }
 
 func apiChangeMangaInfo(w http.ResponseWriter, r *http.Request) {
@@ -299,7 +299,7 @@ func apiChangeMangaInfo(w http.ResponseWriter, r *http.Request) {
 
 		var buf bytes.Buffer
 		io.Copy(&buf, file)
-		fsApi.WriteFile("images/mangaTitles/"+mux.Vars(r)["name"]+header.Filename, buf.Bytes())
+		fsApi.WriteFile("images/mangaTitles/"+mux.Vars(r)["name"]+"/"+header.Filename, buf.Bytes())
 		dbDriver.AddMangaTitle(mux.Vars(r)["name"], header.Filename)
 	case "remTitle":
 		fileName := r.FormValue("fileName")
@@ -309,7 +309,7 @@ func apiChangeMangaInfo(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	apiChangeMangaInfo(w, r)
+	apiGetMangaInfo(w, r)
 }
 
 func apiChangeMangaChapter(w http.ResponseWriter, r *http.Request) {
@@ -335,5 +335,5 @@ func apiChangeMangaChapter(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	apiChangeMangaInfo(w, r)
+	apiGetMangaInfo(w, r)
 }
