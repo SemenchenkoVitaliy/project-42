@@ -27,6 +27,9 @@ func Start() {
 	r.HandleFunc("/api/manga/{name}", apiChangeMangaInfo).Methods("POST")
 	r.HandleFunc("/api/manga/{name}/{chapter}", apiChangeMangaChapter).Methods("POST")
 
+	r.HandleFunc("/admin", httpAdmin).Methods("GET")
+	r.HandleFunc("/admin/manga/{name}", httpAdminManga).Methods("GET")
+
 	http.Handle("/", r)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
 

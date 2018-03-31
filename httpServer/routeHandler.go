@@ -34,10 +34,12 @@ type readMangaData struct {
 }
 
 type htmlTemplates struct {
-	Main      *template.Template
-	MangaMain *template.Template
-	MangaInfo *template.Template
-	MangaRead *template.Template
+	Admin      *template.Template
+	AdminManga *template.Template
+	Main       *template.Template
+	MangaMain  *template.Template
+	MangaInfo  *template.Template
+	MangaRead  *template.Template
 }
 
 var templates htmlTemplates = htmlTemplates{}
@@ -62,6 +64,18 @@ func init() {
 	templates.MangaRead, err = template.ParseFiles("./HTML/mangaRead.gohtml")
 	if err != nil {
 		common.CreateLog(err, "Parse ./HTML/mangaRead.gohtml")
+		return
+	}
+
+	templates.Admin, err = template.ParseFiles("./HTML/admin.gohtml")
+	if err != nil {
+		common.CreateLog(err, "Parse ./HTML/admin.gohtml")
+		return
+	}
+
+	templates.AdminManga, err = template.ParseFiles("./HTML/adminManga.gohtml")
+	if err != nil {
+		common.CreateLog(err, "Parse ./HTML/adminManga.gohtml")
 		return
 	}
 }
@@ -90,6 +104,28 @@ func processMangaTitles(mangaSlice []dbDriver.Manga) []dbDriver.Manga {
 	}
 
 	return mangaSlice
+}
+
+func httpAdmin(w http.ResponseWriter, r *http.Request) {
+	data := dbDriver.GetMangaAllMin()
+
+	err := templates.Admin.Execute(w, data)
+	if err != nil {
+		common.CreateLog(err, "Execute template admin")
+		http.Error(w, err.Error(), 500)
+		return
+	}
+}
+
+func httpAdminManga(w http.ResponseWriter, r *http.Request) {
+	data, _ := dbDriver.GetManga(mux.Vars(r)["name"])
+
+	err := templates.AdminManga.Execute(w, data)
+	if err != nil {
+		common.CreateLog(err, "Execute template adminManga")
+		http.Error(w, err.Error(), 500)
+		return
+	}
 }
 
 func httpMain(w http.ResponseWriter, r *http.Request) {
@@ -272,7 +308,7 @@ func apiChangeMangaMain(w http.ResponseWriter, r *http.Request) {
 
 		mangaLoader.AddManga(url)
 	default:
-		http.Error(w, "no such action", 400)
+		http.Error(w, "no such action: "+action, 400)
 		return
 	}
 
@@ -299,7 +335,8 @@ func apiChangeMangaInfo(w http.ResponseWriter, r *http.Request) {
 
 		var buf bytes.Buffer
 		io.Copy(&buf, file)
-		fsApi.WriteFile("images/mangaTitles/"+mux.Vars(r)["name"]+"/"+header.Filename, buf.Bytes())
+
+		fsApi.WriteFile(fmt.Sprintf("images/mangaTitles/%v/%v", mux.Vars(r)["name"], header.Filename), buf.Bytes())
 		dbDriver.AddMangaTitle(mux.Vars(r)["name"], header.Filename)
 	case "remTitle":
 		fileName := r.FormValue("fileName")

@@ -5,155 +5,39 @@
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
   <title>Noname site</title>
   <style>
-  table, th, td {
+    table, th, td {
       border: 1px solid black;
       border-collapse: collapse;
-  }
-  th, td {
       padding: 5px;
       text-align: left;
-  }
-  table td, table td * {
-    vertical-align: top;
-  }
-  form{
-    margin: 10px;
-    border: 1px solid black;
-    padding: 10px;
-  }
-  span{
-    word-wrap:break-word;
-    display:block;
-    width:200px;
-  }
-  input{
-    min-width: 250px;
-  }
-</style>
-<script type="text/javascript">
-function myFunction(className) {
-    var x = document.getElementsByClassName(className);
-    for (e of x) {
-      if (e.style.display === "none") {
-        e.style.display = "block";
-      } else {
-        e.style.display = "none";
-      }
     }
-}
-function showHideByName(name) {
-    var x = document.getElementsByName(name);
-    for (e of x) {
-      if (e.style.display === "none") {
-        e.style.display = "block";
-      } else {
-        e.style.display = "none";
-      }
+    form{
+      padding: 10px;
     }
-}
-</script>
+  </style>
 </head>
   <body>
     <div class="Content">
       <div>
-        <p><form method="POST" enctype="multipart/form-data">
+        <form method="POST" enctype="multipart/form-data">
           <input type="url" name="url" value="" placeholder="http://">
           <input type="text" name="action" value="addManga" hidden>
-          <input type="submit" value="Add manga">
-        </form></p>
-        <p><form method="POST" enctype="multipart/form-data">
+          <input type="submit" value="Add manga" formAction="/api/manga">
+        </form>
+        <form method="POST" enctype="multipart/form-data">
           <input type="text" name="action" value="updAllManga" hidden>
-          <input type="submit" value="Update All Manga">
-        </form></p>
+          <input type="submit" value="Update All Manga" formAction="/api/manga">
+        </form>
       </div>
       <div>
         <table>
           <thead>
-            <th>Name</th>
-            <th>Url</th>
-            <th>Size</th>
-            <th>SrcUrl</th>
-            <th style="width: 70px">AddDate</th>
-            <th style="width: 70px">UpdDate</th>
-            <th style="width: 350px">Actions</th>
-            <th style="min-width: 100px"onclick="myFunction('TitList')">Titles(Click to show/hide)</th>
-            <th style="min-width: 700px" colspan="2" onclick="myFunction('ChapList')">Chapters(Click to show/hide)</th>
+            <th>Manga</th>
           </thead>
           <tbody>
             {{range $manga := .}}
             <tr>
-              <td>{{$manga.Name}}</td>
-              <td><span>{{$manga.Url}}</span></td>
-              <td>{{$manga.Size}}</td>
-              <td><span>{{$manga.SrcUrl}}</span></td>
-              <td>{{$manga.AddDate}}</td>
-              <td>{{$manga.UpdDate}}</td>
-              <td>
-                <p>
-                  <button type="button" name="button"onclick="showHideByName('{{$manga.Url}}_Titles')">Show/Hide titles</button>
-                </p>
-                <p>
-                  <button type="button" name="button"onclick="showHideByName('{{$manga.Url}}_Chapters')">Show/Hide chapters</button>
-                </p>
-                <p><form method="POST" enctype="multipart/form-data">
-                  <input type="submit" value="Update manga">
-                  <input type="text" name="url" value="{{$manga.Url}}" hidden>
-                  <input type="text" name="action" value="updManga" hidden>
-                </form></p>
-                <p><form method="POST" enctype="multipart/form-data">
-                  <input type="submit" value="Delete manga">
-                  <input type="text" name="url" value="{{$manga.Url}}" hidden>
-                  <input type="text" name="action" value="remManga" hidden>
-                </form></p>
-                <p><form method="POST" enctype="multipart/form-data">
-                  <input type="text" name="name" value="" placeholder="{{$manga.Name}}" onclick="this.value='{{$manga.Name}}'">
-                  <input type="submit" value="Change name">
-                  <input type="text" name="url" value="{{$manga.Url}}" hidden>
-                  <input type="text" name="action" value="changeMangaName" hidden>
-                </form></p>
-                <p><form method="POST" enctype="multipart/form-data">
-                  <input type="file" name="file" id="file">
-                  <input type="submit" value="Add title">
-                  <input type="text" name="url" value="{{$manga.Url}}" hidden>
-                  <input type="text" name="action" value="addMangaTitle" hidden>
-                </form></p>
-              </td>
-              <td>
-                <ul name="{{$manga.Url}}_Titles" style="list-style-type:none; display:none" class="TitList">
-                  {{range $title := $manga.Titles}}
-                  <li style="border: 1px solid black; padding: 10px">{{$title}}
-                    <p><form method="POST" enctype="multipart/form-data">
-                      <input type="submit" value="Remove title">
-                      <input type="text" name="title" value="{{$title}}" hidden>
-                      <input type="text" name="url" value="{{$manga.Url}}" hidden>
-                      <input type="text" name="action" value="remMangaTitle" hidden>
-                    </form></p>
-                  </li>
-                  {{end}}
-                </ul>
-              </td>
-              <td>
-                <ul name="{{$manga.Url}}_Chapters" style="list-style-type:none; display:none" class="ChapList">
-                  {{range $chapter := $manga.Chapters}}
-                  <li style="border: 1px solid black; padding: 10px">
-                    {{$chapter.Number}} - <a href="/manga/{{$manga.Name}}/{{$chapter.Number}}/">{{$chapter.Name}}</a>
-                    <p><form method="POST" enctype="multipart/form-data">
-                      <input type="submit" value="Remove chapter">
-                      <input type="text" name="chap" value="{{$chapter.Number}}" hidden>
-                      <input type="text" name="url" value="{{$manga.Url}}" hidden>
-                      <input type="text" name="action" value="remMangaChap" hidden>
-                    </form></p>
-                    <p><form method="POST" enctype="multipart/form-data">
-                      <input type="text" name="name" value="" placeholder="{{$chapter.Name}}" onclick="this.value='{{$chapter.Name}}'">
-                      <input type="submit" value="Change chapter name">
-                      <input type="text" name="chap" value="{{$chapter.Number}}" hidden>
-                      <input type="text" name="url" value="{{$manga.Url}}" hidden>
-                      <input type="text" name="action" value="changeMangaChapName" hidden>
-                    </form></p>
-                  </li>
-                  {{end}}
-                </ul>
-              </td>
+              <td><a href="/admin/manga/{{$manga.Url}}">{{$manga.Name}}</a></td>
             </tr>
             {{end}}
           </tbody>
