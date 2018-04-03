@@ -1,0 +1,13 @@
+table, th, td {
+	border: 1px solid black;
+ 	border-collapse: collapse;
+ 	padding: 5px;
+ 	text-align: left;
+ 	margin: 10px;
+}
+form{
+ 	padding: 10px;
+}
+img{
+	width: 100px;
+}

@@ -186,7 +186,7 @@ func RemoveManga(mangaUrl string) error {
 	}
 
 	imageCache.Remove(mangaUrl)
-	_, err = mangaImagesCollection.RemoveAll(findImagesSelector)
+	_, err := mangaImagesCollection.RemoveAll(findImagesSelector)
 	return err
 }
 

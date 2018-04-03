@@ -26,6 +26,12 @@ type mainData struct {
 	Ranobe []dbDriver.Ranobe
 }
 
+type adminMangaData struct {
+	dbDriver.Manga
+	ImageHost string
+	TitleHost string
+}
+
 type readMangaData struct {
 	dbDriver.Manga
 	Images         []string
@@ -124,10 +130,16 @@ func httpAdmin(w http.ResponseWriter, r *http.Request) {
 }
 
 func httpAdminManga(w http.ResponseWriter, r *http.Request) {
-	data, err := dbDriver.GetManga(mux.Vars(r)["name"])
+	manga, err := dbDriver.GetManga(mux.Vars(r)["name"])
 	if err != nil {
 		writeServerInternalError(w, err, "Get manga "+mux.Vars(r)["name"])
 		return
+	}
+
+	data := adminMangaData{
+		Manga:     manga,
+		ImageHost: mangaImagesUrl,
+		TitleHost: mangaTitlesUrl,
 	}
 
 	err = templates.AdminManga.Execute(w, data)
