@@ -2,59 +2,63 @@ package mangaLoader
 
 import (
 	"fmt"
-	"strconv"
+	"strings"
 
 	"github.com/SemenchenkoVitaliy/project-42/fsApi"
 	dbDriver "github.com/SemenchenkoVitaliy/project-42/mongoDriver"
 )
 
-func LoadChapter(url, dir string) []string {
-	images := parseChapter(url)
-	var names []string
-	var name string
+func loadChapter(url, dir string) ([]string, error) {
+	imageNames := []string{}
+	images := []fsApi.UrlFile{}
 
-	arr := []fsApi.UrlFile{}
+	imageURLs := parseChapter(url)
 
-	for _, item := range images {
-		arr = append(arr, fsApi.UrlFile{Path: dir + "/" + name, Url: item})
+	for _, item := range imageURLs {
+		imageNames = append(imageNames, item[strings.LastIndex(item, "/"):])
+		images = append(images, fsApi.UrlFile{Path: dir, Url: item})
 	}
-	fsApi.LoadFiles(arr)
 
-	return names
+	if err := fsApi.MkDir(dir); err != nil {
+		return imageNames, err
+	}
+	err := fsApi.LoadFiles(images)
+	return imageNames, err
 }
 
-func LoadManga(mangaName string) error {
+func UpdateManga(mangaName string) error {
 	manga, err := dbDriver.GetManga(mangaName)
 	if err != nil {
 		return err
-	}
-	if manga.SrcUrl == "" {
+	} else if manga.SrcUrl == "" {
 		return fmt.Errorf("No source url")
 	}
+
 	chapters := parseChapters(manga.SrcUrl)[manga.Size:]
-	var curDir string
-
 	for index, item := range chapters {
-		curDir = "images/manga/" + mangaName + "/" + strconv.Itoa(index)
+		images, err := loadChapter(item.Url, fmt.Sprintf("images/manga/%v/%v/", mangaName, index))
+		if err != nil {
+			return err
+		}
 
-		fsApi.MkDir(curDir)
-		images := LoadChapter(item.Url, curDir)
-
-		dbDriver.AddMangaChapter(mangaName, dbDriver.MangaChapter{Name: item.Name, Number: manga.Size + index}, images)
+		chapter := dbDriver.MangaChapter{
+			Name:   item.Name,
+			Number: manga.Size + index,
+		}
+		if err = dbDriver.AddMangaChapter(mangaName, chapter, images); err != nil {
+			return err
+		}
 	}
 	return nil
 }
 
 func AddManga(url string) error {
 	manga := parseManga(url)
-
-	err := dbDriver.AddManga(manga)
-	if err != nil {
+	if err := dbDriver.AddManga(manga); err != nil {
 		return err
 	}
-
-	fsApi.MkDir("images/manga/" + manga.Url)
-	fsApi.MkDir("images/mangaTitles/" + manga.Url)
-
-	return nil
+	if err := fsApi.MkDir("images/manga/" + manga.Url); err != nil {
+		return err
+	}
+	return fsApi.MkDir("images/mangaTitles/" + manga.Url)
 }

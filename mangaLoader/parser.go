@@ -6,7 +6,7 @@ import (
 	dbDriver "github.com/SemenchenkoVitaliy/project-42/mongoDriver"
 )
 
-type MangaChapter struct {
+type mangaChapter struct {
 	Name string
 	Url  string
 }
@@ -34,7 +34,7 @@ func parseManga(url string) dbDriver.Manga {
 //   mangachan.me
 //   readmanga.me
 //   mintmanga.com
-func parseChapters(url string) []MangaChapter {
+func parseChapters(url string) []mangaChapter {
 	// select transfer control to appropriate function depending on site
 	if strings.Index(url, "readmanga.me") >= 0 {
 		return parseChaptersType0(url)

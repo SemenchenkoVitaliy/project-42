@@ -66,18 +66,21 @@ func init() {
 		common.CreateLog(err, "Parse ./HTML/mangaRead.gohtml")
 		return
 	}
-
 	templates.Admin, err = template.ParseFiles("./HTML/admin.gohtml")
 	if err != nil {
 		common.CreateLog(err, "Parse ./HTML/admin.gohtml")
 		return
 	}
-
 	templates.AdminManga, err = template.ParseFiles("./HTML/adminManga.gohtml")
 	if err != nil {
 		common.CreateLog(err, "Parse ./HTML/adminManga.gohtml")
 		return
 	}
+}
+
+func writeServerInternalError(w http.ResponseWriter, err error, text string) {
+	common.CreateLog(err, text)
+	http.Error(w, err.Error(), 500)
 }
 
 func processSingleMangaTitles(manga dbDriver.Manga) dbDriver.Manga {
@@ -107,48 +110,70 @@ func processMangaTitles(mangaSlice []dbDriver.Manga) []dbDriver.Manga {
 }
 
 func httpAdmin(w http.ResponseWriter, r *http.Request) {
-	data := dbDriver.GetMangaAllMin()
-
-	err := templates.Admin.Execute(w, data)
+	data, err := dbDriver.GetMangaAllMin()
 	if err != nil {
-		common.CreateLog(err, "Execute template admin")
-		http.Error(w, err.Error(), 500)
+		writeServerInternalError(w, err, "Get minimized manga list")
+		return
+	}
+
+	err = templates.Admin.Execute(w, data)
+	if err != nil {
+		writeServerInternalError(w, err, "Execute template admin")
 		return
 	}
 }
 
 func httpAdminManga(w http.ResponseWriter, r *http.Request) {
-	data, _ := dbDriver.GetManga(mux.Vars(r)["name"])
-
-	err := templates.AdminManga.Execute(w, data)
+	data, err := dbDriver.GetManga(mux.Vars(r)["name"])
 	if err != nil {
-		common.CreateLog(err, "Execute template adminManga")
-		http.Error(w, err.Error(), 500)
+		writeServerInternalError(w, err, "Get manga "+mux.Vars(r)["name"])
+		return
+	}
+
+	err = templates.AdminManga.Execute(w, data)
+	if err != nil {
+		writeServerInternalError(w, err, "Execute template adminManga")
 		return
 	}
 }
 
 func httpMain(w http.ResponseWriter, r *http.Request) {
-	data := mainData{
-		Manga:  processMangaTitles(dbDriver.GetMangaAll()),
-		Ranobe: dbDriver.GetRanobeAll(),
+	manga, err := dbDriver.GetMangaAll()
+	if err != nil {
+		writeServerInternalError(w, err, "Get manga all")
+		return
 	}
 
-	err := templates.Main.Execute(w, data)
+	ranobe, err := dbDriver.GetRanobeAll()
 	if err != nil {
-		common.CreateLog(err, "Execute template main")
-		http.Error(w, err.Error(), 500)
+		writeServerInternalError(w, err, "Get ranobe all")
+		return
+	}
+
+	data := mainData{
+		Manga:  processMangaTitles(manga),
+		Ranobe: ranobe,
+	}
+
+	err = templates.Main.Execute(w, data)
+	if err != nil {
+		writeServerInternalError(w, err, "Execute template main")
 		return
 	}
 }
 
 func httpMangaMain(w http.ResponseWriter, r *http.Request) {
-	data := processMangaTitles(dbDriver.GetMangaAll())
-
-	err := templates.MangaMain.Execute(w, data)
+	manga, err := dbDriver.GetMangaAll()
 	if err != nil {
-		common.CreateLog(err, "Execute template mangaMain")
-		http.Error(w, err.Error(), 500)
+		writeServerInternalError(w, err, "Get manga all")
+		return
+	}
+
+	data := processMangaTitles(manga)
+
+	err = templates.MangaMain.Execute(w, data)
+	if err != nil {
+		writeServerInternalError(w, err, "Execute template mangaMain")
 		return
 	}
 }
@@ -156,8 +181,7 @@ func httpMangaMain(w http.ResponseWriter, r *http.Request) {
 func httpMangaInfo(w http.ResponseWriter, r *http.Request) {
 	data, err := dbDriver.GetManga(mux.Vars(r)["name"])
 	if err != nil {
-		common.CreateLog(err, "Manga database request of "+mux.Vars(r)["name"])
-		http.Error(w, err.Error(), 500)
+		writeServerInternalError(w, err, "Get manga "+mux.Vars(r)["name"])
 		return
 	}
 
@@ -165,8 +189,7 @@ func httpMangaInfo(w http.ResponseWriter, r *http.Request) {
 
 	err = templates.MangaInfo.Execute(w, data)
 	if err != nil {
-		common.CreateLog(err, "Execute template mangaInfo")
-		http.Error(w, err.Error(), 500)
+		writeServerInternalError(w, err, "Execute template mangaInfo")
 		return
 	}
 }
@@ -180,35 +203,50 @@ func httpMangaRead(w http.ResponseWriter, r *http.Request) {
 
 	manga, err := dbDriver.GetManga(mux.Vars(r)["name"])
 	if err != nil {
-		common.CreateLog(err, "Manga database request of "+mux.Vars(r)["name"])
-		http.Error(w, err.Error(), 500)
+		writeServerInternalError(w, err, "Get manga "+mux.Vars(r)["name"])
+		return
+	}
+	images, err := dbDriver.GetMangaImages(mux.Vars(r)["name"], chapNumber)
+	if err != nil {
+		writeServerInternalError(w, err, "Manga images database request of "+mux.Vars(r)["name"]+"-"+mux.Vars(r)["chapter"])
 		return
 	}
 
 	data := readMangaData{
 		Manga:          processSingleMangaTitles(manga),
-		Images:         dbDriver.GetMangaImages(mux.Vars(r)["name"], chapNumber),
+		Images:         images,
 		CurrentChapter: chapNumber,
 		ImageHost:      mangaImagesUrl,
 	}
 
 	err = templates.MangaRead.Execute(w, data)
 	if err != nil {
-		common.CreateLog(err, "Execute template mangaRead")
-		http.Error(w, err.Error(), 500)
+		writeServerInternalError(w, err, "Execute template mangaRead")
 		return
 	}
 }
 
 func apiGetMain(w http.ResponseWriter, r *http.Request) {
-	data := mainData{
-		Manga:  processMangaTitles(dbDriver.GetMangaAll()),
-		Ranobe: dbDriver.GetRanobeAll(),
+	manga, err := dbDriver.GetMangaAll()
+	if err != nil {
+		writeServerInternalError(w, err, "Get manga all")
+		return
 	}
+
+	ranobe, err := dbDriver.GetRanobeAll()
+	if err != nil {
+		writeServerInternalError(w, err, "Get ranobe all")
+		return
+	}
+
+	data := mainData{
+		Manga:  processMangaTitles(manga),
+		Ranobe: ranobe,
+	}
+
 	stringifiedData, err := json.Marshal(data)
 	if err != nil {
-		common.CreateLog(err, "JSON convert in apiGetMain"+mux.Vars(r)["name"])
-		http.Error(w, err.Error(), 500)
+		writeServerInternalError(w, err, "JSON convert in apiGetMain")
 		return
 	}
 
@@ -217,12 +255,15 @@ func apiGetMain(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiGetMangaMain(w http.ResponseWriter, r *http.Request) {
-	data := dbDriver.GetMangaAllMin()
+	data, err := dbDriver.GetMangaAllMin()
+	if err != nil {
+		writeServerInternalError(w, err, "Get minimized manga all")
+		return
+	}
 
 	stringifiedData, err := json.Marshal(data)
 	if err != nil {
-		common.CreateLog(err, "JSON convert in apiGetMangaMain"+mux.Vars(r)["name"])
-		http.Error(w, err.Error(), 500)
+		writeServerInternalError(w, err, "JSON convert in apiGetMangaMain")
 		return
 	}
 
@@ -233,16 +274,14 @@ func apiGetMangaMain(w http.ResponseWriter, r *http.Request) {
 func apiGetMangaInfo(w http.ResponseWriter, r *http.Request) {
 	data, err := dbDriver.GetManga(mux.Vars(r)["name"])
 	if err != nil {
-		common.CreateLog(err, "Manga database request of "+mux.Vars(r)["name"])
-		http.Error(w, err.Error(), 500)
+		writeServerInternalError(w, err, "Get manga "+mux.Vars(r)["name"])
 		return
 	}
 
 	data = processSingleMangaTitles(data)
 	stringifiedData, err := json.Marshal(data)
 	if err != nil {
-		common.CreateLog(err, "JSON convert in apiGetMangaInfo"+mux.Vars(r)["name"])
-		http.Error(w, err.Error(), 500)
+		writeServerInternalError(w, err, "JSON convert in apiGetMangaInfo"+mux.Vars(r)["name"])
 		return
 	}
 
@@ -257,16 +296,19 @@ func apiGetMangaRead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := dbDriver.GetMangaImages(mux.Vars(r)["name"], chapNumber)
-	for index, image := range data {
+	data, err := dbDriver.GetMangaImages(mux.Vars(r)["name"], chapNumber)
+	if err != nil {
+		writeServerInternalError(w, err, "Manga images database request of "+mux.Vars(r)["name"]+"-"+mux.Vars(r)["chapter"])
+		return
+	}
 
+	for index, image := range data {
 		data[index] = fmt.Sprintf("%v%v/%v/%v", mangaImagesUrl, mux.Vars(r)["name"], mux.Vars(r)["chapter"], image)
 	}
 
 	stringifiedData, err := json.Marshal(data)
 	if err != nil {
-		common.CreateLog(err, "JSON convert in apiGetMangaRead"+mux.Vars(r)["name"])
-		http.Error(w, err.Error(), 500)
+		writeServerInternalError(w, err, "JSON convert in apiGetMangaRead"+mux.Vars(r)["name"])
 		return
 	}
 
@@ -319,7 +361,7 @@ func apiChangeMangaInfo(w http.ResponseWriter, r *http.Request) {
 	action := r.FormValue("action")
 	switch action {
 	case "update":
-		mangaLoader.LoadManga(mux.Vars(r)["name"])
+		mangaLoader.UpdateManga(mux.Vars(r)["name"])
 	case "remove":
 		dbDriver.RemoveManga(mux.Vars(r)["name"])
 	case "changeName":

@@ -4,6 +4,16 @@ import (
 	"sort"
 )
 
+var (
+	imageCache mangaImgCache
+	mangaCache mangCache
+)
+
+func init() {
+	imageCache.Cache = make(map[string]map[int][]string)
+	mangaCache.Cache = make(map[string]Manga)
+}
+
 type mangaImgCache struct {
 	Cache map[string]map[int][]string
 }

@@ -55,6 +55,12 @@ func CreateLog(err error, text string) {
 	writeLog(text + "\n" + err.Error())
 }
 
+func CreateLogCritical(err error, text string) {
+	fmt.Println("\x1B[31mError occured when trying to: " + text + "\x1B[0m")
+	writeLog(text + "\n" + err.Error())
+	os.Exit(1)
+}
+
 func writeLog(text string) {
 	if _, err := os.Stat(Config.LogsDir); os.IsNotExist(err) {
 		err = os.Mkdir(Config.LogsDir, 0777)
