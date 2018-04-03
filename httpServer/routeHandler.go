@@ -361,12 +361,15 @@ func apiChangeMangaInfo(w http.ResponseWriter, r *http.Request) {
 	action := r.FormValue("action")
 	switch action {
 	case "update":
+		apiGetMangaMain(w, r)
 		mangaLoader.UpdateManga(mux.Vars(r)["name"])
 	case "remove":
 		dbDriver.RemoveManga(mux.Vars(r)["name"])
+		apiGetMangaMain(w, r)
 	case "changeName":
 		name := r.FormValue("name")
 		dbDriver.ChangeMangaName(mux.Vars(r)["name"], name)
+		apiGetMangaInfo(w, r)
 	case "addTitle":
 		file, header, err := r.FormFile("file")
 		defer file.Close()
@@ -380,15 +383,15 @@ func apiChangeMangaInfo(w http.ResponseWriter, r *http.Request) {
 
 		fsApi.WriteFile(fmt.Sprintf("images/mangaTitles/%v/%v", mux.Vars(r)["name"], header.Filename), buf.Bytes())
 		dbDriver.AddMangaTitle(mux.Vars(r)["name"], header.Filename)
+		apiGetMangaInfo(w, r)
 	case "remTitle":
 		fileName := r.FormValue("fileName")
 		dbDriver.RemoveMangaTitle(mux.Vars(r)["name"], fileName)
+		apiGetMangaInfo(w, r)
 	default:
 		http.Error(w, "no such action", 400)
 		return
 	}
-
-	apiGetMangaInfo(w, r)
 }
 
 func apiChangeMangaChapter(w http.ResponseWriter, r *http.Request) {

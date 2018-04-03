@@ -15,7 +15,7 @@ func loadChapter(url, dir string) ([]string, error) {
 	imageURLs := parseChapter(url)
 
 	for _, item := range imageURLs {
-		imageNames = append(imageNames, item[strings.LastIndex(item, "/"):])
+		imageNames = append(imageNames, item[strings.LastIndex(item, "/")+1:])
 		images = append(images, fsApi.UrlFile{Path: dir, Url: item})
 	}
 
