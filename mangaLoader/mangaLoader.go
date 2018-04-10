@@ -1,28 +1,65 @@
 package mangaLoader
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
 	"strings"
 
-	"github.com/SemenchenkoVitaliy/project-42/fsApi"
+	"github.com/SemenchenkoVitaliy/project-42/common"
 	dbDriver "github.com/SemenchenkoVitaliy/project-42/mongoDriver"
+	"github.com/SemenchenkoVitaliy/project-42/tcp"
 )
 
-func loadChapter(url, dir string) ([]string, error) {
-	imageNames := []string{}
-	images := []fsApi.UrlFile{}
+var mainServer tcp.Server
 
-	imageURLs := parseChapter(url)
+func Init(server tcp.Server) {
+	mainServer = server
+}
 
-	for _, item := range imageURLs {
-		imageNames = append(imageNames, item[strings.LastIndex(item, "/")+1:])
-		images = append(images, fsApi.UrlFile{Path: dir, Url: item})
+type writeFileData struct {
+	Path string
+	Data []byte
+}
+
+func WriteFile(path string, fileData []byte) {
+	data := writeFileData{
+		Path: path,
+		Data: fileData,
+	}
+	b, _ := json.Marshal(data)
+	mainServer.Send(b, 2)
+}
+
+func MkDir(path string) {
+	mainServer.Send([]byte(path), 3)
+}
+
+func loadChapter(url, dir string) (imageNames []string, err error) {
+	var name string
+	imagesUrls := parseChapter(url)
+
+	for _, item := range imagesUrls {
+		name = item[strings.LastIndex(item, "/")+1:]
+
+		resp, err := http.Get(item)
+		defer resp.Body.Close()
+		if err != nil {
+			common.CreateLog(err, fmt.Sprintf("get http page: %v", item))
+			continue
+		}
+
+		bytes, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			common.CreateLog(err, fmt.Sprintf("convert http page to byte slice: %v", item))
+			continue
+		}
+
+		WriteFile("/"+dir+"/"+name, bytes)
+		imageNames = append(imageNames, name)
 	}
 
-	if err := fsApi.MkDir(dir); err != nil {
-		return imageNames, err
-	}
-	err := fsApi.LoadFiles(images)
 	return imageNames, err
 }
 
@@ -52,13 +89,12 @@ func UpdateManga(mangaName string) error {
 	return nil
 }
 
-func AddManga(url string) error {
+func AddManga(url string) (err error) {
 	manga := parseManga(url)
-	if err := dbDriver.AddManga(manga); err != nil {
+	if err = dbDriver.AddManga(manga); err != nil {
 		return err
 	}
-	if err := fsApi.MkDir("images/manga/" + manga.Url); err != nil {
-		return err
-	}
-	return fsApi.MkDir("images/mangaTitles/" + manga.Url)
+	MkDir("images/manga/" + manga.Url)
+	MkDir("images/mangaTitles/" + manga.Url)
+	return err
 }

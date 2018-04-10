@@ -1,25 +1,22 @@
 {
-  "http": {
-    "host": "localhost",
-    "port": 8000
-  },
-  "ftp": {
-    "host": "localhost",
-    "port": 8088
-  },
+  "hostIP": "127.0.0.1",
+  "hostPort": 8080,
+
   "tcp": {
-    "host": "localhost",
-    "port": 8081
+    "hostIP": "127.0.0.1",
+    "hostPort": 9000,
+    "bufferSize": 1024
   },
+
   "db": {
-    "host": "localhost",
-    "port": 27017,
+    "hostIP": "127.0.0.1",
+    "hostPort": 27017,
     "dbName": "gotest",
     "user": "user",
     "password": "qwerty"
   },
-  "serverType": "http",
-  "srcDir": "/home/vitaliy/Documents/Sources",
+
+  "publicUrl": "localhost:8080",
   "logsDir": "./logs",
-  "bufferSize": 1024
+  "srcDir": "/home/vitaliy/Documents/Sources"
 }

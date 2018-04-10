@@ -1,3 +1,4 @@
+{{define "admin"}}
 <!DOCTYPE html>
 <html>
 <head>
@@ -12,11 +13,11 @@
         <form method="POST" enctype="multipart/form-data">
           <input type="url" name="url" value="" placeholder="http://">
           <input type="text" name="action" value="addManga" hidden>
-          <input type="submit" value="Add manga" formAction="/api/manga">
+          <input type="submit" value="Add manga" formAction="api.{{$.PublicUrl}}/manga">
         </form>
         <form method="POST" enctype="multipart/form-data">
           <input type="text" name="action" value="updAllManga" hidden>
-          <input type="submit" value="Update All Manga" formAction="/api/manga">
+          <input type="submit" value="Update All Manga" formAction="api.{{$.PublicUrl}}/manga">
         </form>
       </div>
       <div>
@@ -25,7 +26,7 @@
             <th>Manga</th>
           </thead>
           <tbody>
-            {{range $manga := .}}
+            {{range $manga := $.Manga}}
             <tr>
               <td><a href="/admin/manga/{{$manga.Url}}">{{$manga.Name}}</a></td>
             </tr>
@@ -36,3 +37,4 @@
     </div>
   </body>
 </html>
+{{end}}

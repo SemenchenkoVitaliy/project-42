@@ -10,27 +10,32 @@ import (
 )
 
 type serverConn struct {
-	Host string
-	Port int
+	HostIP   string
+	HostPort int
 }
 
 type dbConn struct {
 	serverConn
+
 	DbName   string
 	User     string
 	Password string
 }
 
-type Conf struct {
-	Http serverConn
-	Ftp  serverConn
-	Tcp  serverConn
-	Db   dbConn
-
-	ServerType string
-	SrcDir     string
-	LogsDir    string
+type tcpConn struct {
+	serverConn
 	BufferSize uint32
+}
+
+type Conf struct {
+	serverConn
+
+	Tcp tcpConn
+	Db  dbConn
+
+	PublicUrl string
+	LogsDir   string
+	SrcDir    string
 }
 
 var Config Conf
@@ -39,14 +44,13 @@ func init() {
 	configFile, err := os.Open("./config.json")
 	defer configFile.Close()
 	if err != nil {
-		fmt.Println("\x1B[31mNo config file was supplied\x1B[0m")
-		os.Exit(1)
+		CreateLogCritical(fmt.Errorf("No config file was supplied"), "open config file")
 	}
+
 	jsonParser := json.NewDecoder(configFile)
 	err = jsonParser.Decode(&Config)
 	if err != nil && err != io.EOF {
-		fmt.Println("\x1B[31mWrong config file format\x1B[0m")
-		os.Exit(1)
+		CreateLogCritical(fmt.Errorf("Wrong config file format"), "decode config file")
 	}
 }
 
@@ -66,7 +70,7 @@ func writeLog(text string) {
 		err = os.Mkdir(Config.LogsDir, 0777)
 		if err != nil {
 			fmt.Println("\x1B[31mError occured when trying to create log directory" + err.Error() + "\x1B[0m")
-			fmt.Println("\x1B[31mError text" + text + "\x1B[0m")
+			fmt.Println("\x1B[31mError text: " + text + "\x1B[0m")
 		}
 	}
 
@@ -74,6 +78,6 @@ func writeLog(text string) {
 	err := ioutil.WriteFile(Config.LogsDir+"/"+name, []byte(text), 0777)
 	if err != nil {
 		fmt.Println("\x1B[31mError occured when trying to write log file" + err.Error() + "\x1B[0m")
-		fmt.Println("\x1B[31mError text" + text + "\x1B[0m")
+		fmt.Println("\x1B[31mError text: " + text + "\x1B[0m")
 	}
 }

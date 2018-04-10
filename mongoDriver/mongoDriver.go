@@ -63,7 +63,7 @@ var (
 )
 
 func init() {
-	url := fmt.Sprintf("%v:%v", common.Config.Db.Host, common.Config.Db.Port)
+	url := fmt.Sprintf("%v:%v", common.Config.Db.HostIP, common.Config.Db.HostPort)
 	session, err := mgo.Dial(url)
 	if err != nil {
 		common.CreateLogCritical(err, "start MongoDB session")
