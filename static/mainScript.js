@@ -2,7 +2,7 @@ const showNextTitle = () => {
   let cur = 0;
   return function(images){
     images[cur++].style.display = 'none';
-    if(cur === images.length) cur = 0;
+    if(cur === images.length - 1) cur = 0;
     images[cur].style.display = 'block';
   }
 }
