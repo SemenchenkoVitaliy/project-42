@@ -1,9 +1,9 @@
 package lbserver
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"net"
 
 	"github.com/SemenchenkoVitaliy/project-42/common"
 	"github.com/SemenchenkoVitaliy/project-42/tcp"
@@ -12,7 +12,13 @@ import (
 func openTcpServer() {
 	tcpHostname := fmt.Sprintf("%v:%v", common.Config.Tcp.HostIP, common.Config.Tcp.HostPort)
 
-	listener, err := net.Listen("tcp", tcpHostname)
+	cer, err := tls.LoadX509KeyPair("./certs/cert.pem", "./certs/key.pem")
+	if err != nil {
+		common.CreateLogCritical(err, "load X509 key pair")
+	}
+
+	config := &tls.Config{Certificates: []tls.Certificate{cer}}
+	listener, err := tls.Listen("tcp", tcpHostname, config)
 	defer listener.Close()
 	if err != nil {
 		common.CreateLogCritical(err, "open tcp server on "+tcpHostname)

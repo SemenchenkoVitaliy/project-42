@@ -1,8 +1,8 @@
 package apiserver
 
 import (
+	"crypto/tls"
 	"fmt"
-	"net"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -38,10 +38,17 @@ func openHttpServer() {
 func Start() {
 	go openHttpServer()
 
-	conn, err := net.Dial("tcp", fmt.Sprintf("%v:%v", common.Config.Tcp.HostIP, common.Config.Tcp.HostPort))
+	cert, err := tls.LoadX509KeyPair("certs/cert.pem", "certs/key.pem")
+	if err != nil {
+		common.CreateLogCritical(err, "load X509 key pair")
+	}
+
+	config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+	conn, err := tls.Dial("tcp", fmt.Sprintf("%v:%v", common.Config.Tcp.HostIP, common.Config.Tcp.HostPort), &config)
 	if err != nil {
 		common.CreateLogCritical(err, "connect through tcp to main server")
 	}
+
 	server := tcp.Server{}
 	server.Start(conn, tcpHandler)
 }

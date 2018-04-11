@@ -34,20 +34,20 @@
               <td>{{.UpdDate}}</td>
               <td><a href="/manga/{{.Url}}">{{.Name}}</a></td>
               <td>
-                <form target="dummyframe" action="api.{{$.PublicUrl}}/manga/{{.Url}}" method="POST" enctype="multipart/form-data">
+                <form target="dummyframe" action="http://api.{{$.PublicUrl}}/manga/{{.Url}}" method="POST" enctype="multipart/form-data">
                   <input type="text" name="action" value="update" hidden>
                   <input type="submit" value="Update">
                 </form>
-                <form target="dummyframe" action="api.{{$.PublicUrl}}/manga/{{.Url}}" method="POST" enctype="multipart/form-data">
+                <form target="dummyframe" action="http://api.{{$.PublicUrl}}/manga/{{.Url}}" method="POST" enctype="multipart/form-data">
                   <input type="text" name="action" value="remove" hidden>
                   <input type="submit" value="Delete">
                 </form>
-                <form target="dummyframe" action="api.{{$.PublicUrl}}/manga/{{.Url}}" method="POST" enctype="multipart/form-data">
+                <form target="dummyframe" action="http://api.{{$.PublicUrl}}/manga/{{.Url}}" method="POST" enctype="multipart/form-data">
                   <input type="text" name="action" value="changeName" hidden>
                   <input type="text" name="name" placeholder="{{.Name}}" onclick="this.value='{{.Name}}'">
                   <input type="submit" value="Change name">
                 </form>
-                <form target="dummyframe" action="api.{{$.PublicUrl}}/manga/{{.Url}}" method="POST" enctype="multipart/form-data">
+                <form target="dummyframe" action="http://api.{{$.PublicUrl}}/manga/{{.Url}}" method="POST" enctype="multipart/form-data">
                   <input type="text" name="action" value="addTitle" hidden>
                   <input type="file" name="file">
                   <input type="submit" value="Add title">
@@ -67,13 +67,13 @@
             <tr>
               <td>{{$title}}</td>
               <td>
-                <form target="dummyframe" action="api.{{$.PublicUrl}}/manga/{{$.Url}}" method="POST" enctype="multipart/form-data">
+                <form target="dummyframe" action="http://api.{{$.PublicUrl}}/manga/{{$.Url}}" method="POST" enctype="multipart/form-data">
                   <input type="text" name="action" value="remTitle" hidden>
                   <input type="text" name="fileName" value="{{$title}}" hidden>
                   <input type="submit" value="Delete title">
                 </form>
               </td>
-              <td><img src="{{$.TitleHost}}{{$.Url}}/{{$title}}"></td>
+              <td><img src="http://img.{{$.PublicUrl}}/images/mangaTitles/{{$.Url}}/{{$title}}"></td>
             </tr>            
             {{end}}
           </tbody>
@@ -90,12 +90,12 @@
               <td>{{$chapter.Number}}</td>
               <td>{{$chapter.Name}}</td>
               <td>
-                <form target="dummyframe" action="api.{{$.PublicUrl}}/manga/{{$.Url}}/{{$chapter.Number}}" method="POST" enctype="multipart/form-data">
+                <form target="dummyframe" action="http://api.{{$.PublicUrl}}/manga/{{$.Url}}/{{$chapter.Number}}" method="POST" enctype="multipart/form-data">
                   <input type="text" name="action" value="changeName" hidden>
                   <input type="text" name="fileName" placeholder="{{$chapter.Name}}" onclick="this.value='{{$chapter.Name}}'">
                   <input type="submit" value="Change Name">
                 </form>
-                <form target="dummyframe" action="api.{{$.PublicUrl}}/manga/{{$.Url}}/{{$chapter.Number}}" method="POST" enctype="multipart/form-data">
+                <form target="dummyframe" action="http://api.{{$.PublicUrl}}/manga/{{$.Url}}/{{$chapter.Number}}" method="POST" enctype="multipart/form-data">
                   <input type="text" name="action" value="remove" hidden>
                   <input type="submit" value="Delete Chapter">
                 </form>                
