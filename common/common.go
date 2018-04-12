@@ -15,31 +15,25 @@ type serverConn struct {
 	HostPort int
 }
 
-type dbConn struct {
+var Config struct {
 	serverConn
 
-	DbName   string
-	User     string
-	Password string
-}
+	Tcp struct {
+		serverConn
+		BufferSize uint32
+	}
+	Db struct {
+		serverConn
 
-type tcpConn struct {
-	serverConn
-	BufferSize uint32
-}
-
-type Conf struct {
-	serverConn
-
-	Tcp tcpConn
-	Db  dbConn
+		DbName   string
+		User     string
+		Password string
+	}
 
 	PublicUrl string
 	LogsDir   string
 	SrcDir    string
 }
-
-var Config Conf
 
 func init() {
 	configFile, err := os.Open("./config.json")

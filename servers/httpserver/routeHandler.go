@@ -12,28 +12,6 @@ import (
 	dbDriver "github.com/SemenchenkoVitaliy/project-42/mongoDriver"
 )
 
-type mainData struct {
-	Manga  []dbDriver.Manga
-	Ranobe []dbDriver.Ranobe
-}
-
-type adminData struct {
-	Manga     []dbDriver.MangaMin
-	PublicUrl string
-}
-
-type adminMangaData struct {
-	dbDriver.Manga
-	PublicUrl string
-}
-
-type readMangaData struct {
-	dbDriver.Manga
-	Images         []string
-	CurrentChapter int
-	PublicUrl      string
-}
-
 var templates = template.Must(template.ParseGlob("./HTML/*.gohtml"))
 
 func writeServerInternalError(w http.ResponseWriter, err error, text string) {
@@ -65,7 +43,10 @@ func httpAdmin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := adminData{
+	data := struct {
+		Manga     []dbDriver.MangaMin
+		PublicUrl string
+	}{
 		Manga:     manga,
 		PublicUrl: common.Config.PublicUrl,
 	}
@@ -84,7 +65,10 @@ func httpAdminManga(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := adminMangaData{
+	data := struct {
+		dbDriver.Manga
+		PublicUrl string
+	}{
 		Manga:     manga,
 		PublicUrl: common.Config.PublicUrl,
 	}
@@ -113,7 +97,10 @@ func httpMain(w http.ResponseWriter, r *http.Request) {
 		manga[index] = processMangaTitles(item)
 	}
 
-	data := mainData{
+	data := struct {
+		Manga  []dbDriver.Manga
+		Ranobe []dbDriver.Ranobe
+	}{
 		Manga:  manga,
 		Ranobe: ranobe,
 	}
@@ -177,7 +164,12 @@ func httpMangaRead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := readMangaData{
+	data := struct {
+		dbDriver.Manga
+		Images         []string
+		CurrentChapter int
+		PublicUrl      string
+	}{
 		Manga:          manga,
 		Images:         images,
 		CurrentChapter: chapNumber,
