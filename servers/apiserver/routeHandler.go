@@ -16,11 +16,6 @@ import (
 	dbDriver "github.com/SemenchenkoVitaliy/project-42/mongoDriver"
 )
 
-type mainData struct {
-	Manga  []dbDriver.Manga
-	Ranobe []dbDriver.Ranobe
-}
-
 func writeServerInternalError(w http.ResponseWriter, err error, text string) {
 	common.CreateLog(err, text)
 	http.Error(w, err.Error(), 500)
@@ -32,7 +27,7 @@ func processMangaTitles(manga dbDriver.Manga) dbDriver.Manga {
 	} else {
 		for iTitle, title := range manga.Titles {
 			manga.Titles[iTitle] = fmt.Sprintf(
-				"common.Config.PublicUrl%v/%v",
+				"http://img.%v/images/mangaTitles/%v/%v",
 				common.Config.PublicUrl,
 				manga.Url,
 				title,
@@ -60,7 +55,10 @@ func apiGetMain(w http.ResponseWriter, r *http.Request) {
 		manga[index] = processMangaTitles(item)
 	}
 
-	data := mainData{
+	data := struct {
+		Manga  []dbDriver.Manga
+		Ranobe []dbDriver.Ranobe
+	}{
 		Manga:  manga,
 		Ranobe: ranobe,
 	}
