@@ -2,61 +2,22 @@ package mangaLoader
 
 import (
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"strings"
-	"time"
-
-	dbDriver "github.com/SemenchenkoVitaliy/project-42/mongoDriver"
 )
 
-func parseMangaType0(url string) dbDriver.Manga {
-	// get manga url name and normal name
-	mangaUrl := strings.Split(url, "/")[3]
-	mangaName := strings.Title(strings.TrimSpace(strings.Replace(mangaUrl, "_", " ", -1)))
-
-	// create new db manga object
-	return dbDriver.Manga{
-		Name:     mangaName,
-		Url:      mangaUrl,
-		Size:     0,
-		SrcUrl:   url,
-		AddDate:  time.Now(),
-		UpdDate:  time.Now(),
-		Titles:   []string{},
-		Chapters: []dbDriver.MangaChapter{},
-	}
+func parseMangaType0(url string) (mangaUrl, mangaName string) {
+	mangaUrl = strings.Split(url, "/")[3]
+	mangaName = strings.Title(strings.TrimSpace(strings.Replace(mangaUrl, "_", " ", -1)))
+	return mangaUrl, mangaName
 }
 
-func parseMangaType1(url string) dbDriver.Manga {
-	// get manga url name and normal name
-	mangaUrl := strings.Replace(url[strings.Index(url, "-")+1:strings.LastIndex(url, ".")], "-", "_", -1)
-	mangaName := strings.Title(strings.TrimSpace(strings.Replace(mangaUrl, "_", " ", -1)))
-
-	// create new db manga object
-	return dbDriver.Manga{
-		Name:     mangaName,
-		Url:      mangaUrl,
-		Size:     0,
-		SrcUrl:   url,
-		AddDate:  time.Now(),
-		UpdDate:  time.Now(),
-		Titles:   []string{},
-		Chapters: []dbDriver.MangaChapter{},
-	}
+func parseMangaType1(url string) (mangaUrl, mangaName string) {
+	mangaUrl = strings.Replace(url[strings.Index(url, "-")+1:strings.LastIndex(url, ".")], "-", "_", -1)
+	mangaName = strings.Title(strings.TrimSpace(strings.Replace(mangaUrl, "_", " ", -1)))
+	return mangaUrl, mangaName
 }
 
-func parseChaptersType0(url string) []mangaChapter {
-	// get html page
-	resp, _ := http.Get(url)
-	bytes, _ := ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
-	body := string(bytes)
-
-	// get hostname
-	hostname := url[(strings.Index(url, "//"))+2:]
-	hostname = url[0:strings.Index(url, "//")+2] + hostname[0:strings.Index(hostname, "/")]
-
+func parseChaptersType0(hostname, body string) (chapters []mangaChapter) {
 	// get slice of chapters urls
 	start := strings.Index(body, "class=\"form-control\">") + 21
 	body = body[start:]
@@ -68,8 +29,6 @@ func parseChaptersType0(url string) []mangaChapter {
 	body = strings.Replace(body, "<option value=\"", "", -1)
 	sliceBody := strings.Split(body, "</option>")
 
-	result := []mangaChapter{}
-
 	// push objects with chapters names and urls to result slice in reverse order
 	for index, _ := range sliceBody {
 		item := sliceBody[len(sliceBody)-index-1]
@@ -77,23 +36,13 @@ func parseChaptersType0(url string) []mangaChapter {
 			continue
 		}
 		temp := strings.Split(item, "\" >")
-		result = append(result, mangaChapter{Url: hostname + temp[0], Name: temp[1]})
+		chapters = append(chapters, mangaChapter{Url: hostname + temp[0], Name: temp[1]})
 	}
 
-	return result
+	return chapters
 }
 
-func parseChaptersType1(url string) []mangaChapter {
-	// get html page
-	resp, _ := http.Get(url)
-	bytes, _ := ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
-	body := string(bytes)
-
-	// get hostname
-	hostname := url[(strings.Index(url, "//"))+2:]
-	hostname = url[0:strings.Index(url, "//")+2] + hostname[0:strings.Index(hostname, "/")]
-
+func parseChaptersType1(hostname, body string) (chapters []mangaChapter) {
 	// get slice of chapters urls
 	start := strings.Index(body, "</style>") + 8
 	body = body[start:]
@@ -102,9 +51,6 @@ func parseChaptersType1(url string) []mangaChapter {
 	body = strings.Replace(body, "&nbsp;&nbsp;", "", -1)
 	sliceBody := strings.Split(body, "a href='")
 
-	result := []mangaChapter{}
-
-	// push objects with chapters names and urls to result slice in reverse order
 	for index, _ := range sliceBody {
 		item := sliceBody[len(sliceBody)-index-1]
 		end := strings.Index(item, "</span>")
@@ -114,19 +60,13 @@ func parseChaptersType1(url string) []mangaChapter {
 		}
 
 		temp := strings.Split(item[0:end], "' title=''>")
-		result = append(result, mangaChapter{Url: hostname + temp[0], Name: temp[1]})
+		chapters = append(chapters, mangaChapter{Url: hostname + temp[0], Name: temp[1]})
 	}
 
-	return result
+	return chapters
 }
 
-func parseChapterType0(url string) []string {
-	// get html page
-	resp, _ := http.Get(url)
-	bytes, _ := ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
-	body := string(bytes)
-
+func parseChapterType0(url, body string) []string {
 	// get slice of strings of parts of images absolute paths
 	start := strings.Index(body, "rm_h.init(") + 10
 	body = body[start:]
@@ -154,13 +94,7 @@ func parseChapterType0(url string) []string {
 	return result
 }
 
-func parseChapterType1(url string) []string {
-	// get html page
-	resp, _ := http.Get(url)
-	bytes, _ := ioutil.ReadAll(resp.Body)
-	resp.Body.Close()
-	body := string(bytes)
-
+func parseChapterType1(body string) []string {
 	// get slice of strings of parts of images absolute paths
 	start := strings.Index(body, "\"fullimg\":[") + 11
 	body = body[start:]

@@ -18,13 +18,8 @@ func Init(server tcp.Server) {
 	mainServer = server
 }
 
-type writeFileData struct {
-	Path string
-	Data []byte
-}
-
 func WriteFile(path string, fileData []byte) {
-	data := writeFileData{
+	data := tcp.WriteFileData{
 		Path: path,
 		Data: fileData,
 	}
@@ -63,7 +58,7 @@ func loadChapter(url, dir string) (imageNames []string, err error) {
 	return imageNames, err
 }
 
-func UpdateManga(mangaName string) error {
+func UpdateManga(mangaName string) (err error) {
 	manga, err := dbDriver.GetManga(mangaName)
 	if err != nil {
 		return err
@@ -86,7 +81,7 @@ func UpdateManga(mangaName string) error {
 			return err
 		}
 	}
-	return nil
+	return err
 }
 
 func AddManga(url string) (err error) {
