@@ -6,7 +6,7 @@
   <link href="/static/styles.css" rel="stylesheet">
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
   <script src="/static/mangaReadScript.js" charset="utf-8"></script>
-  <title>{{.Name}} - Noname site</title>
+  <title>{{.Manga.Name}} - Noname site</title>
 </head>
   <body onload="start()">
     <div class="Header">
@@ -20,7 +20,7 @@
 
       <div class="Menu">
         <div>
-          <a href="/manga/{{.Url}}">{{.Name}}</a>
+          <a href="/manga/{{.Manga.Url}}">{{.Manga.Name}}</a>
           <button id="size" type="button" name="buttonSize" onclick="changeImageSize()">Size</button>
 
           <button id="layout" type="button" name="buttonLayout" onclick="changeLayout()">Layout</button>
@@ -29,8 +29,8 @@
         <div>
           <span>Chapter</span>
           <select class="" name="" id="chapters" onchange="location = this.value;">
-            {{range $chapter := .Chapters}}
-            <option value="/manga/{{$.Url}}/{{$chapter.Number}}">{{$chapter.Name}}</option>
+            {{range $chapter := .Manga.Chapters}}
+            <option value="/manga/{{$.Manga.Url}}/{{$chapter.Number}}">{{$chapter.Name}}</option>
             {{end}}
           </select>
         </div>
@@ -51,7 +51,7 @@
       <div class="ImageDisplay">
         <center>
         {{range $index, $image := .Images}}
-        <img class="Image" id="image{{$index}}" src="http://img.{{$.PublicUrl}}/images/manga/{{$.Url}}/{{$.CurrentChapter}}/{{$image}}">
+        <img class="Image" id="image{{$index}}" src="http://img.{{$.PublicUrl}}/images/manga/{{$.Manga.Url}}/{{$.CurrentChapter}}/{{$image}}">
         {{end}}
       </center>
       </div>

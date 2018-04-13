@@ -19,7 +19,7 @@ func writeServerInternalError(w http.ResponseWriter, err error, text string) {
 	http.Error(w, err.Error(), 500)
 }
 
-func processMangaTitles(manga dbDriver.Manga) dbDriver.Manga {
+func processMangaTitles(manga dbDriver.Product) dbDriver.Product {
 	if len(manga.Titles) == 0 {
 		manga.Titles = append(manga.Titles, "/static/mangaNoTitleImage.png")
 	} else {
@@ -37,17 +37,55 @@ func processMangaTitles(manga dbDriver.Manga) dbDriver.Manga {
 }
 
 func httpAdmin(w http.ResponseWriter, r *http.Request) {
-	manga, err := dbDriver.GetMangaAllMin()
+	mangaUrls, err := dbDriver.GetMangaUrls(0, 10, "name")
 	if err != nil {
-		writeServerInternalError(w, err, "Get minimized manga list")
+		writeServerInternalError(w, err, "Get top 10 manga urls")
 		return
 	}
 
+	ranobeUrls, err := dbDriver.GetRanobeUrls(0, 10, "updDate")
+	if err != nil {
+		writeServerInternalError(w, err, "Get top 10 ranobe urls")
+		return
+	}
+
+	manga := make([]dbDriver.Product, 0, 10)
+
+	for _, mangaUrl := range mangaUrls {
+		product, ok := dbDriver.MangaCache.Find(mangaUrl)
+		if !ok {
+			product, err = dbDriver.GetMangaSingle(mangaUrl)
+			if err != nil {
+				common.CreateLog(err, "GetMangaSingle "+mangaUrl)
+				continue
+			}
+			dbDriver.MangaCache.Add(product)
+		}
+		manga = append(manga, product)
+	}
+
+	if len(manga) == 0 {
+		writeServerInternalError(w, err, "Get top 10 manga")
+		return
+	}
+
+	ranobe, err := dbDriver.GetRanobeMultiple(ranobeUrls)
+	if err != nil {
+		writeServerInternalError(w, err, "Get top 10 ranobe")
+		return
+	}
+
+	for index, item := range manga {
+		manga[index] = processMangaTitles(item)
+	}
+
 	data := struct {
-		Manga     []dbDriver.MangaMin
+		Manga     []dbDriver.Product
+		Ranobe    []dbDriver.Product
 		PublicUrl string
 	}{
 		Manga:     manga,
+		Ranobe:    ranobe,
 		PublicUrl: common.Config.PublicUrl,
 	}
 
@@ -59,14 +97,14 @@ func httpAdmin(w http.ResponseWriter, r *http.Request) {
 }
 
 func httpAdminManga(w http.ResponseWriter, r *http.Request) {
-	manga, err := dbDriver.GetManga(mux.Vars(r)["name"])
+	manga, err := dbDriver.GetMangaSingle(mux.Vars(r)["name"])
 	if err != nil {
 		writeServerInternalError(w, err, "Get manga "+mux.Vars(r)["name"])
 		return
 	}
 
 	data := struct {
-		dbDriver.Manga
+		Manga     dbDriver.Product
 		PublicUrl string
 	}{
 		Manga:     manga,
@@ -81,15 +119,41 @@ func httpAdminManga(w http.ResponseWriter, r *http.Request) {
 }
 
 func httpMain(w http.ResponseWriter, r *http.Request) {
-	manga, err := dbDriver.GetMangaAll()
+	mangaUrls, err := dbDriver.GetMangaUrls(0, 10, "updDate")
 	if err != nil {
-		writeServerInternalError(w, err, "Get manga all")
+		writeServerInternalError(w, err, "Get top 10 manga urls")
 		return
 	}
 
-	ranobe, err := dbDriver.GetRanobeAll()
+	ranobeUrls, err := dbDriver.GetRanobeUrls(0, 10, "updDate")
 	if err != nil {
-		writeServerInternalError(w, err, "Get ranobe all")
+		writeServerInternalError(w, err, "Get top 10 ranobe urls")
+		return
+	}
+
+	manga := make([]dbDriver.Product, 0, 10)
+
+	for _, mangaUrl := range mangaUrls {
+		product, ok := dbDriver.MangaCache.Find(mangaUrl)
+		if !ok {
+			product, err = dbDriver.GetMangaSingle(mangaUrl)
+			if err != nil {
+				common.CreateLog(err, "GetMangaSingle "+mangaUrl)
+				continue
+			}
+			dbDriver.MangaCache.Add(product)
+		}
+		manga = append(manga, product)
+	}
+
+	if len(manga) == 0 {
+		writeServerInternalError(w, err, "Get top 10 manga")
+		return
+	}
+
+	ranobe, err := dbDriver.GetRanobeMultiple(ranobeUrls)
+	if err != nil {
+		writeServerInternalError(w, err, "Get top 10 ranobe")
 		return
 	}
 
@@ -98,8 +162,8 @@ func httpMain(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		Manga  []dbDriver.Manga
-		Ranobe []dbDriver.Ranobe
+		Manga  []dbDriver.Product
+		Ranobe []dbDriver.Product
 	}{
 		Manga:  manga,
 		Ranobe: ranobe,
@@ -113,9 +177,31 @@ func httpMain(w http.ResponseWriter, r *http.Request) {
 }
 
 func httpMangaMain(w http.ResponseWriter, r *http.Request) {
-	data, err := dbDriver.GetMangaAll()
+	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+
+	mangaUrls, err := dbDriver.GetMangaUrls(page*20, 20, "name")
 	if err != nil {
-		writeServerInternalError(w, err, "Get manga all")
+		writeServerInternalError(w, err, "Get manga urls")
+		return
+	}
+
+	data := make([]dbDriver.Product, 0, 20)
+
+	for _, mangaUrl := range mangaUrls {
+		product, ok := dbDriver.MangaCache.Find(mangaUrl)
+		if !ok {
+			product, err = dbDriver.GetMangaSingle(mangaUrl)
+			if err != nil {
+				common.CreateLog(err, "GetMangaSingle "+mangaUrl)
+				continue
+			}
+			dbDriver.MangaCache.Add(product)
+		}
+		data = append(data, product)
+	}
+
+	if len(data) == 0 {
+		writeServerInternalError(w, err, "Get multiple manga")
 		return
 	}
 
@@ -131,7 +217,7 @@ func httpMangaMain(w http.ResponseWriter, r *http.Request) {
 }
 
 func httpMangaInfo(w http.ResponseWriter, r *http.Request) {
-	data, err := dbDriver.GetManga(mux.Vars(r)["name"])
+	data, err := dbDriver.GetMangaSingle(mux.Vars(r)["name"])
 	if err != nil {
 		writeServerInternalError(w, err, "Get manga "+mux.Vars(r)["name"])
 		return
@@ -153,19 +239,28 @@ func httpMangaRead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	manga, err := dbDriver.GetManga(mux.Vars(r)["name"])
+	manga, err := dbDriver.GetMangaSingle(mux.Vars(r)["name"])
 	if err != nil {
 		writeServerInternalError(w, err, "Get manga "+mux.Vars(r)["name"])
 		return
 	}
-	images, err := dbDriver.GetMangaImages(mux.Vars(r)["name"], chapNumber)
-	if err != nil {
-		writeServerInternalError(w, err, "Manga images database request of "+mux.Vars(r)["name"]+"-"+mux.Vars(r)["chapter"])
-		return
+
+	images, ok := dbDriver.MangaPagesCache.Find(mux.Vars(r)["name"], chapNumber)
+	if !ok {
+		images, err := dbDriver.GetMangaChapterPages(mux.Vars(r)["name"], chapNumber)
+		if err != nil {
+			writeServerInternalError(w, err, fmt.Sprintf(
+				"Manga images database request of %v-%v",
+				mux.Vars(r)["name"],
+				mux.Vars(r)["chapter"],
+			))
+			return
+		}
+		dbDriver.MangaPagesCache.Add(mux.Vars(r)["name"], chapNumber, images)
 	}
 
 	data := struct {
-		dbDriver.Manga
+		Manga          dbDriver.Product
 		Images         []string
 		CurrentChapter int
 		PublicUrl      string

@@ -59,7 +59,7 @@ func loadChapter(url, dir string) (imageNames []string, err error) {
 }
 
 func UpdateManga(mangaName string) (err error) {
-	manga, err := dbDriver.GetManga(mangaName)
+	manga, err := dbDriver.GetMangaSingle(mangaName)
 	if err != nil {
 		return err
 	} else if manga.SrcUrl == "" {
@@ -72,12 +72,15 @@ func UpdateManga(mangaName string) (err error) {
 		if err != nil {
 			return err
 		}
-
-		chapter := dbDriver.MangaChapter{
+		number := manga.Size + index
+		chapter := dbDriver.Chapter{
 			Name:   item.Name,
-			Number: manga.Size + index,
+			Number: number,
 		}
-		if err = dbDriver.AddMangaChapter(mangaName, chapter, images); err != nil {
+		if err = dbDriver.AddMangaChapter(mangaName, chapter); err != nil {
+			return err
+		}
+		if err = dbDriver.AddMangaChapterPages(mangaName, number, images); err != nil {
 			return err
 		}
 	}

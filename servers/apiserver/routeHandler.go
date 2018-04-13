@@ -21,7 +21,7 @@ func writeServerInternalError(w http.ResponseWriter, err error, text string) {
 	http.Error(w, err.Error(), 500)
 }
 
-func processMangaTitles(manga dbDriver.Manga) dbDriver.Manga {
+func processMangaTitles(manga dbDriver.Product) dbDriver.Product {
 	if len(manga.Titles) == 0 {
 		manga.Titles = append(manga.Titles, "/static/mangaNoTitleImage.png")
 	} else {
@@ -39,15 +39,41 @@ func processMangaTitles(manga dbDriver.Manga) dbDriver.Manga {
 }
 
 func apiGetMain(w http.ResponseWriter, r *http.Request) {
-	manga, err := dbDriver.GetMangaAll()
+	mangaUrls, err := dbDriver.GetMangaUrls(0, 10, "updDate")
 	if err != nil {
-		writeServerInternalError(w, err, "Get manga all")
+		writeServerInternalError(w, err, "Get top 10 manga urls")
 		return
 	}
 
-	ranobe, err := dbDriver.GetRanobeAll()
+	ranobeUrls, err := dbDriver.GetRanobeUrls(0, 10, "updDate")
 	if err != nil {
-		writeServerInternalError(w, err, "Get ranobe all")
+		writeServerInternalError(w, err, "Get top 10 ranobe urls")
+		return
+	}
+
+	manga := make([]dbDriver.Product, 0, 10)
+
+	for _, mangaUrl := range mangaUrls {
+		product, ok := dbDriver.MangaCache.Find(mangaUrl)
+		if !ok {
+			product, err = dbDriver.GetMangaSingle(mangaUrl)
+			if err != nil {
+				common.CreateLog(err, "GetMangaSingle "+mangaUrl)
+				continue
+			}
+			dbDriver.MangaCache.Add(product)
+		}
+		manga = append(manga, product)
+	}
+
+	if len(manga) == 0 {
+		writeServerInternalError(w, err, "Get top 10 manga")
+		return
+	}
+
+	ranobe, err := dbDriver.GetRanobeMultiple(ranobeUrls)
+	if err != nil {
+		writeServerInternalError(w, err, "Get top 10 ranobe")
 		return
 	}
 
@@ -56,8 +82,8 @@ func apiGetMain(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data := struct {
-		Manga  []dbDriver.Manga
-		Ranobe []dbDriver.Ranobe
+		Manga  []dbDriver.Product
+		Ranobe []dbDriver.Product
 	}{
 		Manga:  manga,
 		Ranobe: ranobe,
@@ -74,13 +100,35 @@ func apiGetMain(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiGetMangaMain(w http.ResponseWriter, r *http.Request) {
-	data, err := dbDriver.GetMangaAllMin()
+	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+
+	mangaUrls, err := dbDriver.GetMangaUrls(page*20, 20, "name")
 	if err != nil {
-		writeServerInternalError(w, err, "Get minimized manga all")
+		writeServerInternalError(w, err, "Get manga urls")
 		return
 	}
 
-	stringifiedData, err := json.Marshal(data)
+	manga := make([]dbDriver.Product, 0, 10)
+
+	for _, mangaUrl := range mangaUrls {
+		product, ok := dbDriver.MangaCache.Find(mangaUrl)
+		if !ok {
+			product, err = dbDriver.GetMangaSingle(mangaUrl)
+			if err != nil {
+				common.CreateLog(err, "GetMangaSingle "+mangaUrl)
+				continue
+			}
+			dbDriver.MangaCache.Add(product)
+		}
+		manga = append(manga, product)
+	}
+
+	if len(manga) == 0 {
+		writeServerInternalError(w, err, "Get top 10 manga")
+		return
+	}
+
+	stringifiedData, err := json.Marshal(manga)
 	if err != nil {
 		writeServerInternalError(w, err, "JSON convert in apiGetMangaMain")
 		return
@@ -91,10 +139,16 @@ func apiGetMangaMain(w http.ResponseWriter, r *http.Request) {
 }
 
 func apiGetMangaInfo(w http.ResponseWriter, r *http.Request) {
-	data, err := dbDriver.GetManga(mux.Vars(r)["name"])
-	if err != nil {
-		writeServerInternalError(w, err, "Get manga "+mux.Vars(r)["name"])
-		return
+	data, ok := dbDriver.MangaCache.Find(mux.Vars(r)["name"])
+	var err error
+	if !ok {
+		data, err = dbDriver.GetMangaSingle(mux.Vars(r)["name"])
+		if err != nil {
+			common.CreateLog(err, "GetMangaSingle "+mux.Vars(r)["name"])
+			writeServerInternalError(w, err, "Get top 10 manga")
+
+		}
+		dbDriver.MangaCache.Add(data)
 	}
 
 	data = processMangaTitles(data)
@@ -115,18 +169,22 @@ func apiGetMangaRead(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data, err := dbDriver.GetMangaImages(mux.Vars(r)["name"], chapNumber)
-	if err != nil {
-		writeServerInternalError(w, err, fmt.Sprintf(
-			"Manga images database request of %v-%v",
-			mux.Vars(r)["name"],
-			mux.Vars(r)["chapter"],
-		))
-		return
+	images, ok := dbDriver.MangaPagesCache.Find(mux.Vars(r)["name"], chapNumber)
+	if !ok {
+		images, err = dbDriver.GetMangaChapterPages(mux.Vars(r)["name"], chapNumber)
+		if err != nil {
+			writeServerInternalError(w, err, fmt.Sprintf(
+				"Manga images database request of %v-%v",
+				mux.Vars(r)["name"],
+				mux.Vars(r)["chapter"],
+			))
+			return
+		}
+		dbDriver.MangaPagesCache.Add(mux.Vars(r)["name"], chapNumber, images)
 	}
 
-	for index, image := range data {
-		data[index] = fmt.Sprintf(
+	for index, image := range images {
+		images[index] = fmt.Sprintf(
 			"http://img.%v/images/manga/%v/%v/%v",
 			common.Config.PublicUrl,
 			mux.Vars(r)["name"],
@@ -135,7 +193,7 @@ func apiGetMangaRead(w http.ResponseWriter, r *http.Request) {
 		)
 	}
 
-	stringifiedData, err := json.Marshal(data)
+	stringifiedData, err := json.Marshal(images)
 	if err != nil {
 		writeServerInternalError(w, err, "JSON convert in apiGetMangaRead"+mux.Vars(r)["name"])
 		return
@@ -158,7 +216,7 @@ func apiChangeMangaMain(w http.ResponseWriter, r *http.Request) {
 		name := r.FormValue("name")
 		url := r.FormValue("url")
 
-		manga := dbDriver.Manga{
+		manga := dbDriver.Product{
 			Name:     name,
 			Url:      url,
 			Size:     0,
@@ -166,9 +224,10 @@ func apiChangeMangaMain(w http.ResponseWriter, r *http.Request) {
 			AddDate:  time.Now(),
 			UpdDate:  time.Now(),
 			Titles:   []string{},
-			Chapters: []dbDriver.MangaChapter{},
+			Chapters: []dbDriver.Chapter{},
 		}
 
+		dbDriver.MangaCache.Add(manga)
 		err := dbDriver.AddManga(manga)
 		if err != nil {
 			http.Error(w, "no such action", 400)
@@ -188,16 +247,21 @@ func apiChangeMangaMain(w http.ResponseWriter, r *http.Request) {
 
 func apiChangeMangaInfo(w http.ResponseWriter, r *http.Request) {
 	action := r.FormValue("action")
+
 	switch action {
 	case "update":
+		dbDriver.MangaCache.Remove(mux.Vars(r)["name"])
 		apiGetMangaMain(w, r)
 		mangaLoader.UpdateManga(mux.Vars(r)["name"])
 	case "remove":
+		dbDriver.MangaPagesCache.Remove(mux.Vars(r)["name"])
+		dbDriver.MangaCache.Remove(mux.Vars(r)["name"])
 		dbDriver.RemoveManga(mux.Vars(r)["name"])
 		apiGetMangaMain(w, r)
 	case "changeName":
 		name := r.FormValue("name")
-		dbDriver.ChangeMangaName(mux.Vars(r)["name"], name)
+		dbDriver.MangaCache.Remove(mux.Vars(r)["name"])
+		dbDriver.SetMangaName(mux.Vars(r)["name"], name)
 		apiGetMangaInfo(w, r)
 	case "addTitle":
 		file, header, err := r.FormFile("file")
@@ -216,10 +280,12 @@ func apiChangeMangaInfo(w http.ResponseWriter, r *http.Request) {
 			header.Filename,
 		)
 		WriteFile(filePath, buf.Bytes())
+		dbDriver.MangaCache.Remove(mux.Vars(r)["name"])
 		dbDriver.AddMangaTitle(mux.Vars(r)["name"], header.Filename)
 		apiGetMangaInfo(w, r)
 	case "remTitle":
 		fileName := r.FormValue("fileName")
+		dbDriver.MangaCache.Remove(mux.Vars(r)["name"])
 		dbDriver.RemoveMangaTitle(mux.Vars(r)["name"], fileName)
 		apiGetMangaInfo(w, r)
 	default:
@@ -238,13 +304,16 @@ func apiChangeMangaChapter(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Incorrect request", 400)
 		}
 
-		dbDriver.ChangeMangaChapName(mux.Vars(r)["name"], int(chapNumber), name)
+		dbDriver.MangaCache.Remove(mux.Vars(r)["name"])
+		dbDriver.SetMangaChapterName(mux.Vars(r)["name"], int(chapNumber), name)
 	case "remove":
 		chapNumber, err := strconv.ParseInt(mux.Vars(r)["chapter"], 10, 0)
 		if err != nil {
 			http.Error(w, "Incorrect request", 400)
 		}
 
+		dbDriver.MangaPagesCache.Remove(mux.Vars(r)["name"])
+		dbDriver.MangaCache.Remove(mux.Vars(r)["name"])
 		dbDriver.RemoveMangaChapter(mux.Vars(r)["name"], int(chapNumber))
 	default:
 		http.Error(w, "no such action", 400)
