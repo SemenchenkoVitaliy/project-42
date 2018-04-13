@@ -312,7 +312,7 @@ func apiChangeMangaChapter(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Incorrect request", 400)
 		}
 
-		dbDriver.MangaPagesCache.Remove(mux.Vars(r)["name"])
+		dbDriver.MangaPagesCache.RemoveChapter(mux.Vars(r)["name"], chapter)
 		dbDriver.MangaCache.Remove(mux.Vars(r)["name"])
 		dbDriver.RemoveMangaChapter(mux.Vars(r)["name"], int(chapNumber))
 	default:
