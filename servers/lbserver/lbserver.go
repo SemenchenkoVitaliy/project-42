@@ -79,6 +79,16 @@ func (sp *serversPull) GetOne() (worker workerServer, err error) {
 	return sp.balFunc(), nil
 }
 
+func (sp *serversPull) GetAll() (workers []workerServer, err error) {
+	if len(sp.workers) == 0 {
+		return workers, fmt.Errorf("not found")
+	}
+	for _, worker := range sp.workers {
+		workers = append(workers, worker)
+	}
+	return workers, nil
+}
+
 func Start() {
 	fileServers.Init("round-robin")
 	apiServers.Init("round-robin")

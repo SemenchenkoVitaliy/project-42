@@ -23,6 +23,14 @@ type WriteFileData struct {
 	Data []byte
 }
 
+type UpdateCache struct {
+	Product  string
+	Name     string
+	Chapter  int
+	Pages    bool
+	PagesAll bool
+}
+
 type Server struct {
 	conn      net.Conn
 	chInData  chan []byte

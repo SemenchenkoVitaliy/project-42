@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"crypto/tls"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -9,6 +10,8 @@ import (
 
 	"github.com/SemenchenkoVitaliy/project-42/common"
 	"github.com/SemenchenkoVitaliy/project-42/tcp"
+
+	dbDriver "github.com/SemenchenkoVitaliy/project-42/mongoDriver"
 )
 
 func tcpHandler(server tcp.Server) {
@@ -22,7 +25,7 @@ func tcpHandler(server tcp.Server) {
 		return
 	}
 	for {
-		_, dt, e := server.Recieve()
+		d, dt, e := server.Recieve()
 		if e != nil {
 			common.CreateLogCritical(err, "unable to recieve a message from server")
 			return
@@ -30,6 +33,26 @@ func tcpHandler(server tcp.Server) {
 		switch dt {
 		case 0:
 			continue
+		case 4:
+			var updCacheData tcp.UpdateCache
+			err = json.Unmarshal(d, &updCacheData)
+			if err != nil {
+				common.CreateLog(err, "encode data to update cache")
+				continue
+			}
+			switch updCacheData.Product {
+			case "manga":
+				dbDriver.MangaCache.Remove(updCacheData.Name)
+				if updCacheData.Pages {
+					if updCacheData.PagesAll {
+						dbDriver.MangaPagesCache.Remove(updCacheData.Name)
+					} else {
+						dbDriver.MangaPagesCache.RemoveChapter(updCacheData.Name, updCacheData.Chapter)
+					}
+				}
+			case "ranobe":
+			default:
+			}
 		default:
 		}
 	}

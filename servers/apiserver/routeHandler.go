@@ -251,17 +251,22 @@ func apiChangeMangaInfo(w http.ResponseWriter, r *http.Request) {
 	switch action {
 	case "update":
 		dbDriver.MangaCache.Remove(mux.Vars(r)["name"])
+		UpdateProductCache("manga", mux.Vars(r)["name"])
+
 		apiGetMangaMain(w, r)
 		mangaLoader.UpdateManga(mux.Vars(r)["name"])
 	case "remove":
-		dbDriver.MangaPagesCache.Remove(mux.Vars(r)["name"])
 		dbDriver.MangaCache.Remove(mux.Vars(r)["name"])
+		dbDriver.MangaPagesCache.Remove(mux.Vars(r)["name"])
+		UpdateProductPagesAllCache("manga", mux.Vars(r)["name"])
+
 		dbDriver.RemoveManga(mux.Vars(r)["name"])
 		apiGetMangaMain(w, r)
 	case "changeName":
-		name := r.FormValue("name")
 		dbDriver.MangaCache.Remove(mux.Vars(r)["name"])
-		dbDriver.SetMangaName(mux.Vars(r)["name"], name)
+		UpdateProductCache("manga", mux.Vars(r)["name"])
+
+		dbDriver.SetMangaName(mux.Vars(r)["name"], r.FormValue("name"))
 		apiGetMangaInfo(w, r)
 	case "addTitle":
 		file, header, err := r.FormFile("file")
@@ -280,13 +285,17 @@ func apiChangeMangaInfo(w http.ResponseWriter, r *http.Request) {
 			header.Filename,
 		)
 		WriteFile(filePath, buf.Bytes())
+
 		dbDriver.MangaCache.Remove(mux.Vars(r)["name"])
+		UpdateProductCache("manga", mux.Vars(r)["name"])
+
 		dbDriver.AddMangaTitle(mux.Vars(r)["name"], header.Filename)
 		apiGetMangaInfo(w, r)
 	case "remTitle":
-		fileName := r.FormValue("fileName")
 		dbDriver.MangaCache.Remove(mux.Vars(r)["name"])
-		dbDriver.RemoveMangaTitle(mux.Vars(r)["name"], fileName)
+		UpdateProductCache("manga", mux.Vars(r)["name"])
+
+		dbDriver.RemoveMangaTitle(mux.Vars(r)["name"], r.FormValue("fileName"))
 		apiGetMangaInfo(w, r)
 	default:
 		http.Error(w, "no such action", 400)
@@ -305,6 +314,8 @@ func apiChangeMangaChapter(w http.ResponseWriter, r *http.Request) {
 		}
 
 		dbDriver.MangaCache.Remove(mux.Vars(r)["name"])
+		UpdateProductCache("manga", mux.Vars(r)["name"])
+
 		dbDriver.SetMangaChapterName(mux.Vars(r)["name"], int(chapNumber), name)
 	case "remove":
 		chapNumber, err := strconv.ParseInt(mux.Vars(r)["chapter"], 10, 0)
@@ -312,8 +323,10 @@ func apiChangeMangaChapter(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Incorrect request", 400)
 		}
 
-		dbDriver.MangaPagesCache.RemoveChapter(mux.Vars(r)["name"], chapter)
 		dbDriver.MangaCache.Remove(mux.Vars(r)["name"])
+		dbDriver.MangaPagesCache.RemoveChapter(mux.Vars(r)["name"], int(chapNumber))
+		UpdateProductPagesCache("manga", mux.Vars(r)["name"], int(chapNumber))
+
 		dbDriver.RemoveMangaChapter(mux.Vars(r)["name"], int(chapNumber))
 	default:
 		http.Error(w, "no such action", 400)

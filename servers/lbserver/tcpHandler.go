@@ -90,7 +90,7 @@ func getHandler(id *int, workerType *string) tcp.ConnDataHandler {
 				*workerType = data.Type
 				authentificated = true
 				fmt.Printf("%v authentificated as %v server on %v:%v\n", server.RemoteInfo(), data.Type, data.IP, data.Port)
-			case 2:
+			case 2, 3:
 				if !authentificated {
 					break
 				}
@@ -98,16 +98,23 @@ func getHandler(id *int, workerType *string) tcp.ConnDataHandler {
 				if err != nil {
 					continue
 				}
-				worker.TCPServer.Send(d, 2)
-			case 3:
+				worker.TCPServer.Send(d, dt)
+			case 4:
 				if !authentificated {
 					break
 				}
-				worker, err := fileServers.GetOne()
-				if err != nil {
-					continue
+				workers, err := apiServers.GetAll()
+				if err == nil {
+					for _, worker := range workers {
+						worker.TCPServer.Send(d, dt)
+					}
 				}
-				worker.TCPServer.Send(d, 2)
+				workers, err = httpServers.GetAll()
+				if err == nil {
+					for _, worker := range workers {
+						worker.TCPServer.Send(d, dt)
+					}
+				}
 			default:
 			}
 		}
