@@ -10,33 +10,67 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 
 	"github.com/SemenchenkoVitaliy/project-42/common"
 	"github.com/SemenchenkoVitaliy/project-42/tcp"
 )
 
-func noDirListing(h http.Handler) http.HandlerFunc {
+type fileCache struct {
+	cache map[string][]byte
+	sync.Mutex
+}
+
+func NewFileCache() *fileCache {
+	return &fileCache{cache: make(map[string][]byte)}
+}
+
+func (fc *fileCache) Add(path string, data []byte) {
+	fc.Lock()
+	defer fc.Unlock()
+
+	fc.cache[path] = data
+}
+
+func (fc *fileCache) Find(path string) (data []byte, ok bool) {
+	fc.Lock()
+	defer fc.Unlock()
+	data, ok = fc.cache[path]
+	return data, ok
+}
+
+func (fc *fileCache) Remove(path string) {
+	fc.Lock()
+	defer fc.Unlock()
+
+	delete(fc.cache, path)
+}
+
+func fsHandler(dir string) http.HandlerFunc {
+	cache := NewFileCache()
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasSuffix(r.URL.Path, "/") {
 			w.WriteHeader(http.StatusForbidden)
 			w.Write([]byte("403 - access forbidden"))
 			return
 		}
-		h.ServeHTTP(w, r)
+		path := dir + "/" + r.URL.Path
+		fd, ok := cache.Find(path)
+		if !ok {
+			h := sha256.New()
+			h.Write([]byte(r.URL.Path))
+			data, err := ioutil.ReadFile(dir + "/" + base64.URLEncoding.EncodeToString(h.Sum(nil)))
+			if err != nil {
+				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte("404 - not found"))
+				return
+			}
+			cache.Add(path, data)
+			w.Write(data)
+		} else {
+			w.Write(fd)
+		}
 	})
-}
-
-type noDirFs string
-
-func (d noDirFs) Open(name string) (http.File, error) {
-	h := sha256.New()
-	h.Write([]byte(name))
-	dir := string(d)
-	if dir == "" {
-		dir = "."
-	}
-	fmt.Println("request")
-	return os.Open(dir + "/" + base64.URLEncoding.EncodeToString(h.Sum(nil)))
 }
 
 func tcpHandler(server tcp.Server) {
@@ -81,8 +115,7 @@ func tcpHandler(server tcp.Server) {
 }
 
 func openHttpServer() {
-	fs := http.FileServer(noDirFs(common.Config.SrcDir))
-	http.Handle("/", noDirListing(fs))
+	http.Handle("/", fsHandler(common.Config.SrcDir))
 
 	fmt.Printf("file server is opened on %v:%v\n", common.Config.HostIP, common.Config.HostPort)
 	err := http.ListenAndServe(fmt.Sprintf("%v:%v", common.Config.HostIP, common.Config.HostPort), nil)
