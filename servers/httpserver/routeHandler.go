@@ -247,7 +247,7 @@ func httpMangaRead(w http.ResponseWriter, r *http.Request) {
 
 	images, ok := dbDriver.MangaPagesCache.Find(mux.Vars(r)["name"], chapNumber)
 	if !ok {
-		images, err := dbDriver.GetMangaChapterPages(mux.Vars(r)["name"], chapNumber)
+		images, err = dbDriver.GetMangaChapterPages(mux.Vars(r)["name"], chapNumber)
 		if err != nil {
 			writeServerInternalError(w, err, fmt.Sprintf(
 				"Manga images database request of %v-%v",

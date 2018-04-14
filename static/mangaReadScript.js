@@ -84,13 +84,13 @@ const nextPage = () => {
 
   if (pageNum + 1 === pages.length) nextChapter();
 
-  images[pageNum + 1].scrollIntoView();
   document.location.hash = '#' + (pageNum + 1);
   document.cookie = 'lastPage=' + (pageNum + 1) + '; path=../';
 
   if (!imageLayout) images[pageNum].style.display = 'none';
   images[pageNum + 1].style.display = 'block';
   pages[pageNum + 1].selected = 'selected';
+  images[pageNum + 1].scrollIntoView();
 };
 
 const prevPage = () => {
@@ -98,13 +98,13 @@ const prevPage = () => {
 
   if (pageNum === 0) prevChapter();
 
-  images[pageNum - 1].scrollIntoView();
   document.location.hash = '#' + (pageNum - 1);
   document.cookie = 'lastPage=' + (pageNum - 1) + '; path=../';
 
   if (!imageLayout) images[pageNum].style.display = 'none';
   images[pageNum - 1].style.display = 'block';
   pages[pageNum - 1].selected = 'selected';
+  images[pageNum - 1].scrollIntoView();
 };
 
 const changePage = (pageNum) => {
