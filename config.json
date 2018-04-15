@@ -18,5 +18,6 @@
 
   "publicUrl": "localhost:8080",
   "logsDir": "./logs",
-  "srcDir": "/home/vitaliy/Documents/Sources"
+  "srcDir": "/home/vitaliy/Documents/Sources",
+  "FSType": "normal"
 }

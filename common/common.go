@@ -33,6 +33,7 @@ var Config struct {
 	PublicUrl string
 	LogsDir   string
 	SrcDir    string
+	FSType    string
 }
 
 func init() {

@@ -140,7 +140,14 @@ func tcpHandler(server tcp.Server) {
 }
 
 func openHttpServer() {
-	http.Handle("/", fsHandler(common.Config.SrcDir))
+	switch common.Config.FSType {
+	case "normal":
+		http.Handle("/", fsHandler(common.Config.SrcDir))
+	case "hashed":
+		http.Handle("/", fsHashedHandler(common.Config.SrcDir))
+	default:
+		common.CreateLogCritical(fmt.Errorf("wrong file server type: %v", common.Config.FSType), "choose file server type")
+	}
 
 	fmt.Printf("file server is opened on %v:%v\n", common.Config.HostIP, common.Config.HostPort)
 	err := http.ListenAndServe(fmt.Sprintf("%v:%v", common.Config.HostIP, common.Config.HostPort), nil)
