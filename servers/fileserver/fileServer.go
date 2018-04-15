@@ -1,7 +1,9 @@
 package fileserver
 
 import (
+	"crypto/sha256"
 	"crypto/tls"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -42,6 +44,33 @@ func (fc *fileCache) Remove(path string) {
 	defer fc.Unlock()
 
 	delete(fc.cache, path)
+}
+
+func fsHashedHandler(dir string) http.HandlerFunc {
+	cache := NewFileCache()
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.HasSuffix(r.URL.Path, "/") {
+			w.WriteHeader(http.StatusForbidden)
+			w.Write([]byte("403 - access forbidden"))
+			return
+		}
+		path := dir + "/" + r.URL.Path
+		fd, ok := cache.Find(path)
+		if !ok {
+			h := sha256.New()
+			h.Write([]byte(r.URL.Path))
+			data, err := ioutil.ReadFile(dir + "/" + base64.URLEncoding.EncodeToString(h.Sum(nil)))
+			if err != nil {
+				w.WriteHeader(http.StatusNotFound)
+				w.Write([]byte("404 - not found"))
+				return
+			}
+			cache.Add(path, data)
+			w.Write(data)
+		} else {
+			w.Write(fd)
+		}
+	})
 }
 
 func fsHandler(dir string) http.HandlerFunc {
@@ -95,7 +124,9 @@ func tcpHandler(server tcp.Server) {
 				common.CreateLog(err, "encode file to write")
 				continue
 			}
-			ioutil.WriteFile(common.Config.SrcDir+"/"+fileData.Path, fileData.Data, 0777)
+			h := sha256.New()
+			h.Write([]byte(fileData.Path))
+			ioutil.WriteFile(common.Config.SrcDir+"/"+base64.URLEncoding.EncodeToString(h.Sum(nil)), fileData.Data, 0777)
 		case 3:
 			dir := string(d)
 			err = os.Mkdir(dir, 0777)
