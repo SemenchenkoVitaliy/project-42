@@ -80,6 +80,7 @@ func openHttpServer() {
 }
 
 func Start() {
+	dbDriver.Init()
 	go openHttpServer()
 
 	cert, err := tls.LoadX509KeyPair("certs/cert.pem", "certs/key.pem")

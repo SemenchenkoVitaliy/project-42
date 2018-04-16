@@ -32,6 +32,7 @@ var Config struct {
 
 	PublicUrl string
 	LogsDir   string
+	Server    string
 	SrcDir    string
 	FSType    string
 }
@@ -70,6 +71,7 @@ func getCmdLineOptions() {
 	dbUser := flag.String("db-user", Config.Db.User, "database username")
 	dbPwd := flag.String("db-pwd", Config.Db.Password, "database password")
 
+	server := flag.String("server-type", Config.Server, "server type(lb, http, api, file)")
 	logsDir := flag.String("logs-dir", Config.LogsDir, "logs directory")
 	srcDir := flag.String("files-dir", Config.SrcDir, "directory to store files(for file servers only)")
 
@@ -88,6 +90,7 @@ func getCmdLineOptions() {
 	Config.Db.User = *dbUser
 	Config.Db.Password = *dbPwd
 
+	Config.Server = *server
 	Config.LogsDir = *logsDir
 	Config.SrcDir = *srcDir
 }

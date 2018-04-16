@@ -9,6 +9,8 @@ import (
 
 	"github.com/SemenchenkoVitaliy/project-42/common"
 	"github.com/SemenchenkoVitaliy/project-42/tcp"
+
+	dbDriver "github.com/SemenchenkoVitaliy/project-42/mongoDriver"
 )
 
 func openHttpServer() {
@@ -36,6 +38,7 @@ func openHttpServer() {
 }
 
 func Start() {
+	dbDriver.Init()
 	go openHttpServer()
 
 	cert, err := tls.LoadX509KeyPair("certs/cert.pem", "certs/key.pem")

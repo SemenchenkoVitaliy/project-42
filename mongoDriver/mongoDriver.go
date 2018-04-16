@@ -16,7 +16,7 @@ var (
 	mangaImagesCollection *mgo.Collection
 )
 
-func init() {
+func Init() {
 	url := fmt.Sprintf("%v:%v", common.Config.Db.HostIP, common.Config.Db.HostPort)
 	session, err := mgo.Dial(url)
 	if err != nil {
