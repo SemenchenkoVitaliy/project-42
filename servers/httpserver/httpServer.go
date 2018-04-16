@@ -21,13 +21,13 @@ func tcpHandler(server tcp.Server) {
 		Type: "http",
 	})
 	if err != nil {
-		common.CreateLogCritical(err, "unable to authentifacate")
+		common.LogCritical(err, "unable to authentifacate")
 		return
 	}
 	for {
 		d, dt, e := server.Recieve()
 		if e != nil {
-			common.CreateLogCritical(err, "unable to recieve a message from server")
+			common.LogCritical(err, "unable to recieve a message from server")
 			return
 		}
 		switch dt {
@@ -37,7 +37,7 @@ func tcpHandler(server tcp.Server) {
 			var updCacheData tcp.UpdateCache
 			err = json.Unmarshal(d, &updCacheData)
 			if err != nil {
-				common.CreateLog(err, "encode data to update cache")
+				common.Log(err, "encode data to update cache")
 				continue
 			}
 			switch updCacheData.Product {
@@ -75,7 +75,7 @@ func openHttpServer() {
 	fmt.Printf("http server is opened on %v:%v\n", common.Config.HostIP, common.Config.HostPort)
 	err := http.ListenAndServe(fmt.Sprintf("%v:%v", common.Config.HostIP, common.Config.HostPort), nil)
 	if err != nil {
-		common.CreateLogCritical(err, fmt.Sprintf("open http server on %v:%v\n", common.Config.HostIP, common.Config.HostPort))
+		common.LogCritical(err, fmt.Sprintf("open http server on %v:%v\n", common.Config.HostIP, common.Config.HostPort))
 	}
 }
 
@@ -85,13 +85,13 @@ func Start() {
 
 	cert, err := tls.LoadX509KeyPair("certs/cert.pem", "certs/key.pem")
 	if err != nil {
-		common.CreateLogCritical(err, "load X509 key pair")
+		common.LogCritical(err, "load X509 key pair")
 	}
 
 	config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 	conn, err := tls.Dial("tcp", fmt.Sprintf("%v:%v", common.Config.Tcp.HostIP, common.Config.Tcp.HostPort), &config)
 	if err != nil {
-		common.CreateLogCritical(err, "connect through tcp to main server")
+		common.LogCritical(err, "connect through tcp to main server")
 	}
 	server := tcp.Server{}
 	server.Start(conn, tcpHandler)

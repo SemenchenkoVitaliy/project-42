@@ -15,7 +15,7 @@ import (
 var templates = template.Must(template.ParseGlob("./HTML/*.gohtml"))
 
 func writeServerInternalError(w http.ResponseWriter, err error, text string) {
-	common.CreateLog(err, text)
+	common.Log(err, text)
 	http.Error(w, err.Error(), 500)
 }
 
@@ -56,7 +56,7 @@ func httpAdmin(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			product, err = dbDriver.GetMangaSingle(mangaUrl)
 			if err != nil {
-				common.CreateLog(err, "GetMangaSingle "+mangaUrl)
+				common.Log(err, "GetMangaSingle "+mangaUrl)
 				continue
 			}
 			dbDriver.MangaCache.Add(product)
@@ -138,7 +138,7 @@ func httpMain(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			product, err = dbDriver.GetMangaSingle(mangaUrl)
 			if err != nil {
-				common.CreateLog(err, "GetMangaSingle "+mangaUrl)
+				common.Log(err, "GetMangaSingle "+mangaUrl)
 				continue
 			}
 			dbDriver.MangaCache.Add(product)
@@ -192,7 +192,7 @@ func httpMangaMain(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			product, err = dbDriver.GetMangaSingle(mangaUrl)
 			if err != nil {
-				common.CreateLog(err, "GetMangaSingle "+mangaUrl)
+				common.Log(err, "GetMangaSingle "+mangaUrl)
 				continue
 			}
 			dbDriver.MangaCache.Add(product)

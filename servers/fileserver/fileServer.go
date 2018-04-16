@@ -105,13 +105,13 @@ func tcpHandler(server tcp.Server) {
 		Type: "file",
 	})
 	if err != nil {
-		common.CreateLogCritical(err, "unable to authentifacate")
+		common.LogCritical(err, "unable to authentifacate")
 		return
 	}
 	for {
 		d, dt, e := server.Recieve()
 		if e != nil {
-			common.CreateLogCritical(err, "unable to recieve a message from server")
+			common.LogCritical(err, "unable to recieve a message from server")
 			return
 		}
 		switch dt {
@@ -121,7 +121,7 @@ func tcpHandler(server tcp.Server) {
 			var fileData tcp.WriteFileData
 			err = json.Unmarshal(d, &fileData)
 			if err != nil {
-				common.CreateLog(err, "encode file to write")
+				common.Log(err, "encode file to write")
 				continue
 			}
 			ioutil.WriteFile(common.Config.SrcDir+"/"+fileData.Path, fileData.Data, 0777)
@@ -129,7 +129,7 @@ func tcpHandler(server tcp.Server) {
 			dir := string(d)
 			err = os.Mkdir(dir, 0777)
 			if err != nil {
-				common.CreateLog(err, "create directory: "+dir)
+				common.Log(err, "create directory: "+dir)
 				continue
 			}
 		default:
@@ -144,13 +144,13 @@ func tcpHashedHandler(server tcp.Server) {
 		Type: "file",
 	})
 	if err != nil {
-		common.CreateLogCritical(err, "unable to authentifacate")
+		common.LogCritical(err, "unable to authentifacate")
 		return
 	}
 	for {
 		d, dt, e := server.Recieve()
 		if e != nil {
-			common.CreateLogCritical(err, "unable to recieve a message from server")
+			common.LogCritical(err, "unable to recieve a message from server")
 			return
 		}
 		switch dt {
@@ -160,7 +160,7 @@ func tcpHashedHandler(server tcp.Server) {
 			var fileData tcp.WriteFileData
 			err = json.Unmarshal(d, &fileData)
 			if err != nil {
-				common.CreateLog(err, "encode file to write")
+				common.Log(err, "encode file to write")
 				continue
 			}
 			h := sha256.New()
@@ -170,7 +170,7 @@ func tcpHashedHandler(server tcp.Server) {
 			dir := string(d)
 			err = os.Mkdir(dir, 0777)
 			if err != nil {
-				common.CreateLog(err, "create directory: "+dir)
+				common.Log(err, "create directory: "+dir)
 				continue
 			}
 		default:
@@ -185,13 +185,13 @@ func openHttpServer() {
 	case "hashed":
 		http.Handle("/", fsHashedHandler(common.Config.SrcDir))
 	default:
-		common.CreateLogCritical(fmt.Errorf("wrong file server type: %v", common.Config.FSType), "choose file server type")
+		common.LogCritical(fmt.Errorf("wrong file server type: %v", common.Config.FSType), "choose file server type")
 	}
 
 	fmt.Printf("file server is opened on %v:%v\n", common.Config.HostIP, common.Config.HostPort)
 	err := http.ListenAndServe(fmt.Sprintf("%v:%v", common.Config.HostIP, common.Config.HostPort), nil)
 	if err != nil {
-		common.CreateLogCritical(err, fmt.Sprintf("open http server on %v:%v\n", common.Config.HostIP, common.Config.HostPort))
+		common.LogCritical(err, fmt.Sprintf("open http server on %v:%v\n", common.Config.HostIP, common.Config.HostPort))
 	}
 
 }
@@ -201,13 +201,13 @@ func Start() {
 
 	cert, err := tls.LoadX509KeyPair("certs/cert.pem", "certs/key.pem")
 	if err != nil {
-		common.CreateLogCritical(err, "load X509 key pair")
+		common.LogCritical(err, "load X509 key pair")
 	}
 
 	config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 	conn, err := tls.Dial("tcp", fmt.Sprintf("%v:%v", common.Config.Tcp.HostIP, common.Config.Tcp.HostPort), &config)
 	if err != nil {
-		common.CreateLogCritical(err, "connect through tcp to main server")
+		common.LogCritical(err, "connect through tcp to main server")
 	}
 
 	server := tcp.Server{}
@@ -217,6 +217,6 @@ func Start() {
 	case "hashed":
 		server.Start(conn, tcpHashedHandler)
 	default:
-		common.CreateLogCritical(fmt.Errorf("wrong file server type: %v", common.Config.FSType), "choose file server type")
+		common.LogCritical(fmt.Errorf("wrong file server type: %v", common.Config.FSType), "choose file server type")
 	}
 }

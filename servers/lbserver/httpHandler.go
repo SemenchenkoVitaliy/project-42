@@ -28,7 +28,7 @@ func openHttpServer() {
 	fmt.Printf("Main server is opened on %v\n", hostname)
 
 	if err := http.ListenAndServe(hostname, mux); err != nil {
-		common.CreateLogCritical(err, "open main http server on "+hostname)
+		common.LogCritical(err, "open main http server on "+hostname)
 	}
 }
 

@@ -17,7 +17,7 @@ import (
 )
 
 func writeServerInternalError(w http.ResponseWriter, err error, text string) {
-	common.CreateLog(err, text)
+	common.Log(err, text)
 	http.Error(w, err.Error(), 500)
 }
 
@@ -58,7 +58,7 @@ func apiGetMain(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			product, err = dbDriver.GetMangaSingle(mangaUrl)
 			if err != nil {
-				common.CreateLog(err, "GetMangaSingle "+mangaUrl)
+				common.Log(err, "GetMangaSingle "+mangaUrl)
 				continue
 			}
 			dbDriver.MangaCache.Add(product)
@@ -115,7 +115,7 @@ func apiGetMangaMain(w http.ResponseWriter, r *http.Request) {
 		if !ok {
 			product, err = dbDriver.GetMangaSingle(mangaUrl)
 			if err != nil {
-				common.CreateLog(err, "GetMangaSingle "+mangaUrl)
+				common.Log(err, "GetMangaSingle "+mangaUrl)
 				continue
 			}
 			dbDriver.MangaCache.Add(product)
@@ -144,7 +144,7 @@ func apiGetMangaInfo(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		data, err = dbDriver.GetMangaSingle(mux.Vars(r)["name"])
 		if err != nil {
-			common.CreateLog(err, "GetMangaSingle "+mux.Vars(r)["name"])
+			common.Log(err, "GetMangaSingle "+mux.Vars(r)["name"])
 			writeServerInternalError(w, err, "Get top 10 manga")
 
 		}
@@ -272,7 +272,7 @@ func apiChangeMangaInfo(w http.ResponseWriter, r *http.Request) {
 		file, header, err := r.FormFile("file")
 		defer file.Close()
 		if err != nil {
-			common.CreateLog(err, "form file in addTitle in"+mux.Vars(r)["name"])
+			common.Log(err, "form file in addTitle in"+mux.Vars(r)["name"])
 			http.Error(w, err.Error(), 500)
 		}
 

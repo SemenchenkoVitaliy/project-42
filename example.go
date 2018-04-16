@@ -20,6 +20,6 @@ func main() {
 	case "lb":
 		lbserver.Start()
 	default:
-		common.CreateLogCritical(fmt.Errorf("Incorrect server type: "+common.Config.Server), "Launch server")
+		common.LogCritical(fmt.Errorf("Incorrect server type: "+common.Config.Server), "Launch server")
 	}
 }

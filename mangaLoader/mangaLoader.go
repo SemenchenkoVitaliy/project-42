@@ -41,13 +41,13 @@ func loadChapter(url, dir string) (imageNames []string, err error) {
 		resp, err := http.Get(item)
 		defer resp.Body.Close()
 		if err != nil {
-			common.CreateLog(err, fmt.Sprintf("get http page: %v", item))
+			common.Log(err, fmt.Sprintf("get http page: %v", item))
 			continue
 		}
 
 		bytes, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			common.CreateLog(err, fmt.Sprintf("convert http page to byte slice: %v", item))
+			common.Log(err, fmt.Sprintf("convert http page to byte slice: %v", item))
 			continue
 		}
 

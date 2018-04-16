@@ -20,11 +20,11 @@ func Init() {
 	url := fmt.Sprintf("%v:%v", common.Config.Db.HostIP, common.Config.Db.HostPort)
 	session, err := mgo.Dial(url)
 	if err != nil {
-		common.CreateLogCritical(err, "start MongoDB session")
+		common.LogCritical(err, "start MongoDB session")
 	}
 
 	if err = session.DB(common.Config.Db.DbName).Login(common.Config.Db.User, common.Config.Db.Password); err != nil {
-		common.CreateLogCritical(err, "authenticate MongoDB session")
+		common.LogCritical(err, "authenticate MongoDB session")
 	}
 
 	session.SetMode(mgo.Monotonic, true)

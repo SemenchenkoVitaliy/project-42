@@ -22,13 +22,13 @@ func tcpHandler(server tcp.Server) {
 		Type: "api",
 	})
 	if err != nil {
-		common.CreateLogCritical(err, "unable to authentifacate")
+		common.LogCritical(err, "unable to authentifacate")
 		return
 	}
 	for {
 		d, dt, e := server.Recieve()
 		if e != nil {
-			common.CreateLogCritical(err, "unable to recieve a message from server")
+			common.LogCritical(err, "unable to recieve a message from server")
 			return
 		}
 		switch dt {
@@ -38,7 +38,7 @@ func tcpHandler(server tcp.Server) {
 			var updCacheData tcp.UpdateCache
 			err = json.Unmarshal(d, &updCacheData)
 			if err != nil {
-				common.CreateLog(err, "encode data to update cache")
+				common.Log(err, "encode data to update cache")
 				continue
 			}
 			switch updCacheData.Product {

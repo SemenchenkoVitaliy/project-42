@@ -14,14 +14,14 @@ func openTcpServer() {
 
 	cer, err := tls.LoadX509KeyPair("./certs/cert.pem", "./certs/key.pem")
 	if err != nil {
-		common.CreateLogCritical(err, "load X509 key pair")
+		common.LogCritical(err, "load X509 key pair")
 	}
 
 	config := &tls.Config{Certificates: []tls.Certificate{cer}}
 	listener, err := tls.Listen("tcp", tcpHostname, config)
 	defer listener.Close()
 	if err != nil {
-		common.CreateLogCritical(err, "open tcp server on "+tcpHostname)
+		common.LogCritical(err, "open tcp server on "+tcpHostname)
 	}
 
 	fmt.Printf("TCP server is opened on %v\n", tcpHostname)
