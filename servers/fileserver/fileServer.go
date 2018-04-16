@@ -124,6 +124,45 @@ func tcpHandler(server tcp.Server) {
 				common.CreateLog(err, "encode file to write")
 				continue
 			}
+			ioutil.WriteFile(common.Config.SrcDir+"/"+fileData.Path, fileData.Data, 0777)
+		case 3:
+			dir := string(d)
+			err = os.Mkdir(dir, 0777)
+			if err != nil {
+				common.CreateLog(err, "create directory: "+dir)
+				continue
+			}
+		default:
+		}
+	}
+}
+
+func tcpHashedHandler(server tcp.Server) {
+	err := server.Auth(tcp.AuthData{
+		IP:   common.Config.HostIP,
+		Port: common.Config.HostPort,
+		Type: "file",
+	})
+	if err != nil {
+		common.CreateLogCritical(err, "unable to authentifacate")
+		return
+	}
+	for {
+		d, dt, e := server.Recieve()
+		if e != nil {
+			common.CreateLogCritical(err, "unable to recieve a message from server")
+			return
+		}
+		switch dt {
+		case 0:
+			continue
+		case 2:
+			var fileData tcp.WriteFileData
+			err = json.Unmarshal(d, &fileData)
+			if err != nil {
+				common.CreateLog(err, "encode file to write")
+				continue
+			}
 			h := sha256.New()
 			h.Write([]byte(fileData.Path))
 			ioutil.WriteFile(common.Config.SrcDir+"/"+base64.URLEncoding.EncodeToString(h.Sum(nil)), fileData.Data, 0777)
@@ -172,5 +211,12 @@ func Start() {
 	}
 
 	server := tcp.Server{}
-	server.Start(conn, tcpHandler)
+	switch common.Config.FSType {
+	case "normal":
+		server.Start(conn, tcpHandler)
+	case "hashed":
+		server.Start(conn, tcpHashedHandler)
+	default:
+		common.CreateLogCritical(fmt.Errorf("wrong file server type: %v", common.Config.FSType), "choose file server type")
+	}
 }
