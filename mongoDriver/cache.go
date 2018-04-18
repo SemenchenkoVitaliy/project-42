@@ -27,7 +27,8 @@ func (c *ProductPageCache) Add(name string, chapter int, pages []string) {
 		c.cache[name] = make(map[int][]string)
 	}
 	sort.Strings(pages)
-	c.cache[name][chapter] = append([]string{}, pages...)
+	c.cache[name][chapter] = make([]string, 0, len(pages))
+	copy(c.cache[name][chapter], pages)
 }
 
 func (c *ProductPageCache) Find(name string, chapter int) (pages []string, ok bool) {
@@ -36,7 +37,8 @@ func (c *ProductPageCache) Find(name string, chapter int) (pages []string, ok bo
 
 	if _, ok = c.cache[name]; ok {
 		if p, ok := c.cache[name][chapter]; ok {
-			pages = append(pages, p...)
+			pages = make([]string, 0, len(p))
+			copy(pages, p)
 			return pages, true
 		}
 	}
@@ -72,10 +74,14 @@ func (c *ProductCache) Add(product Product) {
 	c.Lock()
 	defer c.Unlock()
 
-	titles := []string{}
-	chapters := []Chapter{}
-	titles = append(titles, product.Titles...)
-	chapters = append(chapters, product.Chapters...)
+	product.Titles = make([]string, 0, len(c.cache[product.Url].Titles))
+	copy(product.Titles, c.cache[product.Url].Titles)
+
+	titles := make([]string, 0, len(product.Titles))
+	copy(titles, product.Titles)
+
+	chapters := make([]Chapter, 0, len(product.Chapters))
+	copy(chapters, product.Chapters)
 
 	c.cache[product.Url] = Product{
 		Size:     product.Size,
@@ -104,8 +110,12 @@ func (c ProductCache) Find(name string) (product Product, ok bool) {
 			UpdDate:  c.cache[name].UpdDate,
 			Chapters: []Chapter{},
 		}
-		product.Titles = append(product.Titles, c.cache[name].Titles...)
-		product.Chapters = append(product.Chapters, c.cache[name].Chapters...)
+		product.Titles = make([]string, 0, len(c.cache[product.Url].Titles))
+		copy(product.Titles, c.cache[product.Url].Titles)
+
+		product.Chapters = make([]Chapter, 0, len(c.cache[product.Url].Chapters))
+		copy(product.Chapters, c.cache[product.Url].Chapters)
+
 		return product, true
 	}
 	return product, false
