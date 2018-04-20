@@ -5,16 +5,15 @@ import (
 
 	"github.com/SemenchenkoVitaliy/project-42/common"
 	"github.com/SemenchenkoVitaliy/project-42/mangaLoader"
-	"github.com/SemenchenkoVitaliy/project-42/tcp"
-
 	dbDriver "github.com/SemenchenkoVitaliy/project-42/mongoDriver"
+	"github.com/SemenchenkoVitaliy/project-42/tcp"
 )
 
 var mainServer tcp.Server
 
 func tcpHandler(server tcp.Server) {
 	mainServer = server
-	mangaLoader.Init(server)
+	mangaLoader.Init(&server)
 
 	err := server.Auth(tcp.AuthData{
 		IP:   common.Config.HostIP,
@@ -57,19 +56,6 @@ func tcpHandler(server tcp.Server) {
 		default:
 		}
 	}
-}
-
-func WriteFile(path string, fileData []byte) {
-	data := tcp.WriteFileData{
-		Path: path,
-		Data: fileData,
-	}
-	b, _ := json.Marshal(data)
-	mainServer.Send(b, 2)
-}
-
-func MkDir(path string) {
-	mainServer.Send([]byte(path), 3)
 }
 
 func UpdateProductCache(Product, Name string) {

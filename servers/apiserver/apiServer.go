@@ -8,9 +8,8 @@ import (
 	"github.com/gorilla/mux"
 
 	"github.com/SemenchenkoVitaliy/project-42/common"
-	"github.com/SemenchenkoVitaliy/project-42/tcp"
-
 	dbDriver "github.com/SemenchenkoVitaliy/project-42/mongoDriver"
+	"github.com/SemenchenkoVitaliy/project-42/tcp"
 )
 
 func openHttpServer() {

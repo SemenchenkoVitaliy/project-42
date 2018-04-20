@@ -233,8 +233,8 @@ func apiChangeMangaMain(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "no such action", 400)
 		}
 
-		MkDir("images/manga/" + url)
-		MkDir("images/mangaTitles/" + url)
+		mainServer.MkDir("images/manga/" + url)
+		mainServer.MkDir("images/mangaTitles/" + url)
 
 		mangaLoader.AddManga(url)
 	default:
@@ -284,7 +284,7 @@ func apiChangeMangaInfo(w http.ResponseWriter, r *http.Request) {
 			mux.Vars(r)["name"],
 			header.Filename,
 		)
-		WriteFile(filePath, buf.Bytes())
+		mainServer.WriteFile(filePath, buf.Bytes())
 
 		dbDriver.MangaCache.Remove(mux.Vars(r)["name"])
 		UpdateProductCache("manga", mux.Vars(r)["name"])

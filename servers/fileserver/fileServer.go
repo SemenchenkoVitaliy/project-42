@@ -167,12 +167,7 @@ func tcpHashedHandler(server tcp.Server) {
 			h.Write([]byte(fileData.Path))
 			ioutil.WriteFile(common.Config.SrcDir+"/"+base64.URLEncoding.EncodeToString(h.Sum(nil)), fileData.Data, 0777)
 		case 3:
-			dir := string(d)
-			err = os.Mkdir(dir, 0777)
-			if err != nil {
-				common.Log(err, "create directory: "+dir)
-				continue
-			}
+			continue
 		default:
 		}
 	}

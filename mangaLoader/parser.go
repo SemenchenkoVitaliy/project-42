@@ -14,20 +14,29 @@ type mangaChapter struct {
 	Url  string
 }
 
-func load(url string) (body string) {
-	resp, _ := http.Get(url)
-	bytes, _ := ioutil.ReadAll(resp.Body)
+// load makes http GET request
+//
+// It accepts url and returns data body, loaded by this url
+func load(url string) (body string, err error) {
+	resp, err := http.Get(url)
+	if err != nil {
+		return body, err
+	}
+	bytes, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return body, err
+	}
 	resp.Body.Close()
-	return string(bytes)
+	return string(bytes), err
 }
 
+// getHostName accepts url and returns its hostname
 func getHostname(url string) (hostname string) {
 	hostname = url[(strings.Index(url, "//"))+2:]
 	return url[0:strings.Index(url, "//")+2] + hostname[0:strings.Index(hostname, "/")]
 }
 
-// parseManga parses url and creates
-// structure to add to database
+// parseManga parses url and returns structure which can be added to database
 func parseManga(url string) (manga dbDriver.Product) {
 	var mangaUrl string
 	var mangaName string
@@ -55,10 +64,11 @@ func parseManga(url string) (manga dbDriver.Product) {
 	}
 }
 
-// parseChapters loads and parses html page and
-// returns slice of structs with name and url
+// parseChapters loads and parses html page
+//
+// It returns slice of mangaChapter structs
 func parseChapters(url string) (chapters []mangaChapter) {
-	body := load(url)
+	body, _ := load(url)
 	hostname := getHostname(url)
 
 	switch hostname {
@@ -73,10 +83,11 @@ func parseChapters(url string) (chapters []mangaChapter) {
 	}
 }
 
-// parseChapters loads and parses html page and
-// returns slice of pages urls
+// parseChapters loads and parses html page
+//
+// It returns slice of images urls
 func parseChapter(url string) (pages []string) {
-	body := load(url)
+	body, _ := load(url)
 
 	switch getHostname(url) {
 	case "http://readmanga.me":

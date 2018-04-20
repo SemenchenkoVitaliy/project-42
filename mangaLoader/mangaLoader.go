@@ -1,7 +1,8 @@
+// Package mangaLoader contains tools for loading and updating manga from other
+// sources
 package mangaLoader
 
 import (
-	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -12,28 +13,22 @@ import (
 	"github.com/SemenchenkoVitaliy/project-42/tcp"
 )
 
-var mainServer tcp.Server
+// stores master server data structure
+var mainServer *tcp.Server
 
-func Init(server tcp.Server) {
+// Init saves master server to which will be sent writeFile and mkDir requests in a local variable
+func Init(server *tcp.Server) {
 	mainServer = server
 }
 
-func WriteFile(path string, fileData []byte) {
-	data := tcp.WriteFileData{
-		Path: path,
-		Data: fileData,
-	}
-	b, _ := json.Marshal(data)
-	mainServer.Send(b, 2)
-}
-
-func MkDir(path string) {
-	mainServer.Send([]byte(path), 3)
-}
-
+// loadChapter loads page html, parses it for images urls and loads those images
+//
+// It accepts url of page and directory path to load images into, returns slice
+// of images filenames and error if any
 func loadChapter(url, dir string) (imageNames []string, err error) {
 	var name string
 	imagesUrls := parseChapter(url)
+	imageNames = make([]string, 0, len(imagesUrls))
 
 	for _, item := range imagesUrls {
 		name = item[strings.LastIndex(item, "/")+1:]
@@ -51,13 +46,16 @@ func loadChapter(url, dir string) (imageNames []string, err error) {
 			continue
 		}
 
-		WriteFile("/"+dir+"/"+name, bytes)
+		mainServer.WriteFile("/"+dir+"/"+name, bytes)
 		imageNames = append(imageNames, name)
 	}
 
 	return imageNames, err
 }
 
+// UpdateManga loads the newest version of manga which provides site defined in manga SrcUrl
+//
+// It accepts manga Url and returns error if any
 func UpdateManga(mangaName string) (err error) {
 	manga, err := dbDriver.GetMangaSingle(mangaName)
 	if err != nil {
@@ -87,12 +85,16 @@ func UpdateManga(mangaName string) (err error) {
 	return err
 }
 
+// AddManga adds manga to database and creates directories for it
+//
+// It accepts url of site which will be used in future to load new verions and
+// returns error if any
 func AddManga(url string) (err error) {
 	manga := parseManga(url)
 	if err = dbDriver.AddManga(manga); err != nil {
 		return err
 	}
-	MkDir("images/manga/" + manga.Url)
-	MkDir("images/mangaTitles/" + manga.Url)
+	mainServer.MkDir("images/manga/" + manga.Url)
+	mainServer.MkDir("images/mangaTitles/" + manga.Url)
 	return err
 }

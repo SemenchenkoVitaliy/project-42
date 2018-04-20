@@ -1,3 +1,4 @@
+// Package common provides config options and error logging functions
 package common
 
 import (
@@ -9,22 +10,21 @@ import (
 	"time"
 )
 
-type serverConn struct {
+// Config contains options provided by config file
+// or by command line options
+var Config struct {
 	HostIP   string
 	HostPort int
-}
-
-var Config struct {
-	serverConn
 
 	Tcp struct {
-		serverConn
+		HostIP     string
+		HostPort   int
 		BufferSize uint32
 	}
 
 	Db struct {
-		serverConn
-
+		HostIP   string
+		HostPort int
 		DbName   string
 		User     string
 		Password string
@@ -37,6 +37,8 @@ var Config struct {
 	FSType    string
 }
 
+// init reads data provided by json-based config file, parses it to Config
+// variable and rewrites config options with command line options if any
 func init() {
 	configFile, err := ioutil.ReadFile("./config.json")
 	if err != nil {
@@ -47,10 +49,7 @@ func init() {
 	if err != nil {
 		LogCritical(fmt.Errorf("Wrong config file format"), "unmarshal config file")
 	}
-	getCmdLineOptions()
-}
 
-func getCmdLineOptions() {
 	flag.Usage = func() {
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage:\n	%v[options]\n\nParameters:\n\n", os.Args[0])
 		flag.PrintDefaults()
@@ -76,17 +75,32 @@ func getCmdLineOptions() {
 	flag.Parse()
 }
 
+// Log writes error to log file and displays short error to display or writes
+// full error directly to screen if error happend when writing data to file
+//
+// It accepts error and short explanation message which will be displayed on
+// screen as well as written to log file
 func Log(err error, text string) {
 	fmt.Println("\x1B[31mError occured when trying to: " + text + "\x1B[0m")
 	writeLog(text + "\n" + err.Error())
 }
 
+// Log writes error to log file and displays short error to display or writes
+// full error directly to screen if error happend when writing data to file.
+// After that it exits programm with error code
+//
+// It accepts error and short explanation message which will be displayed on
+// screen as well as written to log file
 func LogCritical(err error, text string) {
 	fmt.Println("\x1B[31mError occured when trying to: " + text + "\x1B[0m")
 	writeLog(text + "\n" + err.Error())
 	os.Exit(1)
 }
 
+// writeLog creates log direcotry if it is not exists and writes data provided
+// by Log or LogCritical to file
+//
+// It accepts string which will be written to log file
 func writeLog(text string) {
 	if _, err := os.Stat(Config.LogsDir); os.IsNotExist(err) {
 		err = os.Mkdir(Config.LogsDir, 0777)

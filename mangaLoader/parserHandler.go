@@ -5,18 +5,24 @@ import (
 	"strings"
 )
 
+// parseMangaType0 is realisation of parseManga for sites with layout
+// similar to 'http://readmanga.me' and 'http://mintmanga.com'
 func parseMangaType0(url string) (mangaUrl, mangaName string) {
 	mangaUrl = strings.Split(url, "/")[3]
 	mangaName = strings.Title(strings.TrimSpace(strings.Replace(mangaUrl, "_", " ", -1)))
 	return mangaUrl, mangaName
 }
 
+// parseMangaType1 is realisation of parseManga for sites with layout
+// similar to 'http://mangachan.me'
 func parseMangaType1(url string) (mangaUrl, mangaName string) {
 	mangaUrl = strings.Replace(url[strings.Index(url, "-")+1:strings.LastIndex(url, ".")], "-", "_", -1)
 	mangaName = strings.Title(strings.TrimSpace(strings.Replace(mangaUrl, "_", " ", -1)))
 	return mangaUrl, mangaName
 }
 
+// parseChaptersType0 is realisation of parseChapters for sites with layout
+// similar to 'http://readmanga.me' and 'http://mintmanga.com'
 func parseChaptersType0(hostname, body string) (chapters []mangaChapter) {
 	// get slice of chapters urls
 	start := strings.Index(body, "class=\"form-control\">") + 21
@@ -42,6 +48,8 @@ func parseChaptersType0(hostname, body string) (chapters []mangaChapter) {
 	return chapters
 }
 
+// parseChaptersType1 is realisation of parseManga for sites with layout
+// similar to 'http://mangachan.me'
 func parseChaptersType1(hostname, body string) (chapters []mangaChapter) {
 	// get slice of chapters urls
 	start := strings.Index(body, "</style>") + 8
@@ -66,6 +74,8 @@ func parseChaptersType1(hostname, body string) (chapters []mangaChapter) {
 	return chapters
 }
 
+// parseChapterType0 is realisation of parseChapter for sites with layout
+// similar to 'http://readmanga.me' and 'http://mintmanga.com'
 func parseChapterType0(url, body string) []string {
 	// get slice of strings of parts of images absolute paths
 	start := strings.Index(body, "rm_h.init(") + 10
@@ -94,6 +104,8 @@ func parseChapterType0(url, body string) []string {
 	return result
 }
 
+// parseChapterType1 is realisation of parseChapter for sites with layout
+// similar to 'http://mangachan.me'
 func parseChapterType1(body string) []string {
 	// get slice of strings of parts of images absolute paths
 	start := strings.Index(body, "\"fullimg\":[") + 11
