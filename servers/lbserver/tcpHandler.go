@@ -115,6 +115,16 @@ func getHandler(id *int, workerType *string) tcp.ConnDataHandler {
 						worker.TCPServer.Send(d, dt)
 					}
 				}
+			case 5:
+				if !authentificated {
+					break
+				}
+				workers, err := httpServers.GetAll()
+				if err == nil {
+					for _, worker := range workers {
+						worker.TCPServer.Send(d, dt)
+					}
+				}
 			default:
 			}
 		}

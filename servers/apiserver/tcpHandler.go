@@ -93,3 +93,7 @@ func UpdateProductPagesCache(Product, Name string, Chapter int) {
 	b, _ := json.Marshal(data)
 	mainServer.Send(b, 4)
 }
+
+func UpdateHtml() {
+	mainServer.Send([]byte{}, 5)
+}

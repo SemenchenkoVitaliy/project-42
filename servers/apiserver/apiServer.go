@@ -16,6 +16,7 @@ func openHttpServer() {
 	r := mux.NewRouter()
 
 	r.HandleFunc("/", apiGetMain).Methods("GET")
+	r.HandleFunc("/", apiCmd).Methods("POST")
 
 	r.HandleFunc("/manga", apiGetMangaMain).Methods("GET")
 	r.HandleFunc("/manga", apiChangeMangaMain).Methods("POST")

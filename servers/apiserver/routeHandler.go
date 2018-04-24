@@ -203,6 +203,18 @@ func apiGetMangaRead(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(stringifiedData))
 }
 
+func apiCmd(w http.ResponseWriter, r *http.Request) {
+	action := r.FormValue("action")
+	switch action {
+	case "reloadHtml":
+		UpdateHtml()
+	default:
+		http.Error(w, "no such action: "+action, 400)
+		return
+	}
+	w.WriteHeader(200)
+}
+
 func apiChangeMangaMain(w http.ResponseWriter, r *http.Request) {
 	action := r.FormValue("action")
 	switch action {

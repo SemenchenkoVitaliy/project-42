@@ -5,19 +5,25 @@
   <meta charset="utf-8">
   <link href="/static/adminStyles.css" rel="stylesheet">
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+  <script src="/static/adminScript.js" charset="utf-8"></script>
   <title>Noname site</title>
 </head>
-  <body>
+  <body onload="onload()">
     <div class="Content">
+      <iframe name="dummyframe" hidden></iframe>
       <div>
-        <form method="POST" enctype="multipart/form-data">
+        <form target="dummyframe" action="http://api.{{$.PublicUrl}}/manga" method="POST" enctype="multipart/form-data">
           <input type="url" name="url" value="" placeholder="http://">
           <input type="text" name="action" value="addManga" hidden>
-          <input type="submit" value="Add manga" formAction="api.{{$.PublicUrl}}/manga">
+          <input type="submit" value="Add manga">
         </form>
-        <form method="POST" enctype="multipart/form-data">
+        <form target="dummyframe" action="http://api.{{$.PublicUrl}}/manga" method="POST" enctype="multipart/form-data">
           <input type="text" name="action" value="updAllManga" hidden>
-          <input type="submit" value="Update All Manga" formAction="api.{{$.PublicUrl}}/manga">
+          <input type="submit" value="Update All Manga">
+        </form>
+        <form target="dummyframe" action="http://api.{{$.PublicUrl}}/" method="POST" enctype="multipart/form-data">
+          <input type="text" name="action" value="reloadHtml" hidden>
+          <input type="submit" value="Update Html on HTTP servers">
         </form>
       </div>
       <div>

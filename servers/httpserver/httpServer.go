@@ -52,6 +52,8 @@ func tcpHandler(server tcp.Server) {
 			case "ranobe":
 			default:
 			}
+		case 5:
+			reloadTemplates()
 		default:
 		}
 	}

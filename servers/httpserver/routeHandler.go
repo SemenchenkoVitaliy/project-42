@@ -14,6 +14,10 @@ import (
 
 var templates = template.Must(template.ParseGlob("./HTML/*.gohtml"))
 
+func reloadTemplates() {
+	templates = template.Must(template.ParseGlob("./HTML/*.gohtml"))
+}
+
 func writeServerInternalError(w http.ResponseWriter, err error, text string) {
 	common.Log(err, text)
 	http.Error(w, err.Error(), 500)
