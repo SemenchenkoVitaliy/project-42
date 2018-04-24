@@ -92,7 +92,7 @@
               <td>
                 <form target="dummyframe" action="http://api.{{$.PublicUrl}}/manga/{{$.Manga.Url}}/{{$chapter.Number}}" method="POST" enctype="multipart/form-data">
                   <input type="text" name="action" value="changeName" hidden>
-                  <input type="text" name="fileName" placeholder="{{$chapter.Name}}" onclick="this.value='{{$chapter.Name}}'">
+                  <input type="text" name="name" placeholder="{{$chapter.Name}}" onclick="this.value='{{$chapter.Name}}'">
                   <input type="submit" value="Change Name">
                 </form>
                 <form target="dummyframe" action="http://api.{{$.PublicUrl}}/manga/{{$.Manga.Url}}/{{$chapter.Number}}" method="POST" enctype="multipart/form-data">
