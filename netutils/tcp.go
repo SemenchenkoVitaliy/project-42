@@ -1,16 +1,17 @@
-// Package tcp contains tools for working with tcp connection
-package tcp
+package netutils
 
 import (
+	"crypto/tls"
 	"encoding/binary"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net"
 
-	"github.com/SemenchenkoVitaliy/project-42/common"
+	"github.com/SemenchenkoVitaliy/project-42/utils"
 )
 
+// ConnDataHandler handles coming and outgoing data based on its type
 type ConnDataHandler func(server Server)
 
 // AuthData stores data about worker server which will be sent to main load
@@ -19,6 +20,7 @@ type AuthData struct {
 	IP   string
 	Port int
 	Type string
+	Id   int
 }
 
 // WriteFileData stores data about file which will be sent to file server and
@@ -31,15 +33,13 @@ type WriteFileData struct {
 // Update Cache stores data about product which was removed or modified and
 // cache about it should be refreshed
 type UpdateCache struct {
-	Product  string
-	Name     string
-	Chapter  int
-	Pages    bool
-	PagesAll bool
+	Product string
+	Name    string
 }
 
 // Server stores data about server tcp connection
 type Server struct {
+	bufSize   uint32
 	conn      net.Conn
 	chInData  chan []byte
 	chInType  chan uint8
@@ -48,27 +48,34 @@ type Server struct {
 	chQuit    chan bool
 }
 
-// Start initializes Server struct and enables data recieving and sending
+// NewServer creates new instance of Server and initializes it with given net.Conn
+func NewServer(conn net.Conn, bufferSize uint32) (server *Server) {
+	return &Server{
+		bufSize: bufferSize,
+		conn:    conn,
+	}
+}
+
+// Start initializes Server struct channels and starts data recieving and sending
 //
-// It accepts tcp connection and data handler function
-func (server *Server) Start(conn net.Conn, handler ConnDataHandler) {
-	server.conn = conn
+// It accepts data handler function
+func (server *Server) Start(handler ConnDataHandler) {
 	server.chInData, server.chInType = make(chan []byte), make(chan uint8)
 	server.chOutData, server.chOutType = make(chan []byte), make(chan uint8)
 	server.chQuit = make(chan bool)
+
+	defer server.conn.Close()
+	defer close(server.chInType)
+	defer close(server.chInData)
+	defer close(server.chOutType)
+	defer close(server.chOutData)
+	defer close(server.chQuit)
 
 	go server.createReadChan()
 	go server.createWriteChan()
 	go handler(*server)
 
 	_ = <-server.chQuit
-
-	close(server.chInType)
-	close(server.chInData)
-	close(server.chOutType)
-	close(server.chOutData)
-	close(server.chQuit)
-	server.conn.Close()
 }
 
 // Auth sends authentification data to main server
@@ -95,6 +102,23 @@ func (server *Server) WriteFile(path string, fileData []byte) {
 // servers
 func (server *Server) MkDir(path string) {
 	server.Send([]byte(path), 3)
+}
+
+// UpdateHtml sends command to update cached products from database to main
+// server which will redirect it to all api and http servers
+func (server *Server) UpdateProductCache(Product, Name string) {
+	data := UpdateCache{
+		Product: Product,
+		Name:    Name,
+	}
+	b, _ := json.Marshal(data)
+	server.Send(b, 4)
+}
+
+// UpdateHtml sends command to update cached html templates to main server which
+// will redirect it to all http servers
+func (server *Server) UpdateHtml() {
+	server.Send([]byte{}, 5)
 }
 
 // Recieve reads data from tcp connection
@@ -140,7 +164,7 @@ func (server Server) Disconnect() {
 // createReadChan reads data from tcp connection and writes it to channels
 func (server Server) createReadChan() {
 	for {
-		buf := make([]byte, common.Config.Tcp.BufferSize)
+		buf := make([]byte, server.bufSize)
 		n, err := server.conn.Read(buf)
 		if err != nil {
 			if err == io.EOF {
@@ -189,8 +213,8 @@ func (server Server) createWriteChan() {
 		dataSize := uint32(len(data))
 		writeDataSize := dataSize
 
-		if writeDataSize%common.Config.Tcp.BufferSize != 0 {
-			writeDataSize += common.Config.Tcp.BufferSize - (writeDataSize % common.Config.Tcp.BufferSize)
+		if writeDataSize%server.bufSize != 0 {
+			writeDataSize += server.bufSize - (writeDataSize % server.bufSize)
 		}
 
 		b := make([]byte, 4)
@@ -207,5 +231,84 @@ func (server Server) createWriteChan() {
 			return
 		}
 
+	}
+}
+
+type TCPClient struct {
+	cert string
+	key  string
+}
+
+func NewTCPClient() (s *TCPClient) {
+	return &TCPClient{}
+}
+
+func (s *TCPClient) Cert(cert, key string) {
+	s.cert = cert
+	s.key = key
+}
+
+func (s *TCPClient) Connect(ip string, port int, tcpHandler ConnDataHandler) {
+	cert, err := tls.LoadX509KeyPair(s.cert, s.key)
+	if err != nil {
+		utils.LogCritical(err, "load X509 key pair")
+	}
+
+	config := tls.Config{
+		Certificates:       []tls.Certificate{cert},
+		InsecureSkipVerify: true,
+	}
+
+	conn, err := tls.Dial("tcp", fmt.Sprintf("%v:%v", ip, port), &config)
+
+	if err != nil {
+		utils.LogCritical(err, "connect to tcp server")
+	}
+
+	server := NewServer(conn, utils.Config.TCP.BufSize)
+	server.Start(tcpHandler)
+
+}
+
+type TCPServer struct {
+	cert string
+	key  string
+}
+
+func NewTCPServer() (s *TCPServer) {
+	return &TCPServer{}
+}
+
+func (s *TCPServer) Cert(cert, key string) {
+	s.cert = cert
+	s.key = key
+}
+
+func (s *TCPServer) Listen(ip string, port int, tcpHandler ConnDataHandler) {
+	hostname := fmt.Sprintf("%v:%v", ip, port)
+
+	cert, err := tls.LoadX509KeyPair(s.cert, s.key)
+	if err != nil {
+		utils.LogCritical(err, "load X509 key pair")
+	}
+
+	config := &tls.Config{
+		Certificates: []tls.Certificate{cert},
+	}
+
+	listener, err := tls.Listen("tcp", hostname, config)
+	if err != nil {
+		utils.LogCritical(err, "open tcp server on "+hostname)
+	}
+	defer listener.Close()
+
+	fmt.Println("TCP server is opened on " + hostname)
+
+	for {
+		conn, err := listener.Accept()
+		if err != nil {
+			panic(err)
+		}
+		go NewServer(conn, utils.Config.TCP.BufSize).Start(tcpHandler)
 	}
 }

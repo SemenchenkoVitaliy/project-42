@@ -1,4 +1,4 @@
-{{define "mangaRead"}}
+{{define "mangaChapter"}}
 <!DOCTYPE html>
 <html>
 <head>
@@ -51,7 +51,7 @@
       <div class="ImageDisplay">
         <center>
         {{range $index, $image := .Images}}
-        <img class="Image" id="image{{$index}}" src="http://img.{{$.PublicUrl}}/images/manga/{{$.Manga.Url}}/{{$.CurrentChapter}}/{{$image}}">
+        <img class="Image" id="image{{$index}}" src="{{$image}}">
         {{end}}
       </center>
       </div>

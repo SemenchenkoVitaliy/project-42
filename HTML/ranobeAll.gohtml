@@ -1,4 +1,4 @@
-{{define "mangaMain"}}
+{{define "ranobeMain"}}
 <!DOCTYPE html>
 <html>
 <head>
@@ -20,14 +20,14 @@
     <div class="Content">
 
       <div class="SectionName">
-        <a href="/manga">Manga</a>
+        <a href="/ranobe">Ranobe</a>
       </div>
 
       <div class="Section">
         {{range $key := .}}
           <div class="Product">
-            <a href="/manga/{{$key.Url}}">
-            {{range $title := $key.Titles}}<img src="{{$title}}" alt="">{{end}}
+            <a href="/ranobe/{{$key.Url}}">
+            {{range $cover := $key.Covers}}<img src="{{$cover}}" alt="">{{end}}
             <p>{{$key.Name}}</p>
             </a>
           </div>

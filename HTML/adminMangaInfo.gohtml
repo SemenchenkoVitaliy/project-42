@@ -1,14 +1,25 @@
-{{define "adminManga"}}
+{{define "adminMangaInfo"}}
 <!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <link href="/static/adminStyles.css" rel="stylesheet">
+  <link href="/static/styles.css" rel="stylesheet">
   <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
   <script src="/static/adminScript.js" charset="utf-8"></script>
   <title>Noname site</title>
 </head>
   <body onload="onload()">
+    <div class="Header">
+      <center>
+        <a href="/">
+          <span>Noname site ¯\_(ツ)_/¯</span>
+        </a>
+      </center>
+    </div>
+    <div class="User">
+      <span>Hello, {{.UserName}}!</span>
+      <span class="Button"><a href="/logout">Log out</a></span>
+    </div>
     <div class="Content">
       <div>
         <iframe name="dummyframe" hidden></iframe>
@@ -40,7 +51,7 @@
                 </form>
                 <form target="dummyframe" action="http://api.{{$.PublicUrl}}/manga/{{.Manga.Url}}" method="POST" enctype="multipart/form-data">
                   <input type="text" name="action" value="remove" hidden>
-                  <input type="submit" value="Delete">
+                  <input type="submit" value="Delete" onclick="document.location='/admin'">
                 </form>
                 <form target="dummyframe" action="http://api.{{$.PublicUrl}}/manga/{{.Manga.Url}}" method="POST" enctype="multipart/form-data">
                   <input type="text" name="action" value="changeName" hidden>
@@ -48,9 +59,14 @@
                   <input type="submit" value="Change name">
                 </form>
                 <form target="dummyframe" action="http://api.{{$.PublicUrl}}/manga/{{.Manga.Url}}" method="POST" enctype="multipart/form-data">
-                  <input type="text" name="action" value="addTitle" hidden>
-                  <input type="file" name="file">
-                  <input type="submit" value="Add title">
+                  <input type="text" name="action" value="addCover" hidden>
+                  <input type="file" name="file" multiple="multiple">
+                  <input type="submit" value="Add cover image">
+                </form>
+                <form target="dummyframe" action="http://api.{{$.PublicUrl}}/manga/{{.Manga.Url}}" method="POST" enctype="multipart/form-data">
+                  <input type="text" name="action" value="addChapter" hidden>
+                  <input type="text" name="name" value="" placeholder="Chapter Name">
+                  <input type="submit" value="Add chapter">
                 </form>
               </td>
             </tr>
@@ -63,25 +79,25 @@
             <th>Image</th>
           </thead>
           <tbody>
-            {{range $title := .Manga.Titles}}
+            {{range $cover := .Manga.Covers}}
             <tr>
-              <td>{{$title}}</td>
+              <td>{{$cover}}</td>
               <td>
                 <form target="dummyframe" action="http://api.{{$.PublicUrl}}/manga/{{$.Manga.Url}}" method="POST" enctype="multipart/form-data">
-                  <input type="text" name="action" value="remTitle" hidden>
-                  <input type="text" name="fileName" value="{{$title}}" hidden>
-                  <input type="submit" value="Delete title">
+                  <input type="text" name="action" value="remCover" hidden>
+                  <input type="text" name="fileName" value="{{$cover}}" hidden>
+                  <input type="submit" value="Delete cover image">
                 </form>
               </td>
-              <td><img src="http://img.{{$.PublicUrl}}/images/mangaTitles/{{$.Manga.Url}}/{{$title}}"></td>
+              <td><img src="http://img.{{$.PublicUrl}}/images/mangaCovers/{{$.Manga.Url}}/{{$cover}}"></td>
             </tr>            
             {{end}}
           </tbody>
         </table>
         <table>
           <thead>
-            <th>Chapter number</th>
-            <th>Chapter name</th>
+            <th>#</th>
+            <th>Name</th>
             <th>Actions</th>
           </thead>
           <tbody>
@@ -98,7 +114,16 @@
                 <form target="dummyframe" action="http://api.{{$.PublicUrl}}/manga/{{$.Manga.Url}}/{{$chapter.Number}}" method="POST" enctype="multipart/form-data">
                   <input type="text" name="action" value="remove" hidden>
                   <input type="submit" value="Delete Chapter">
-                </form>                
+                </form> 
+                <form target="dummyframe" action="http://api.{{$.PublicUrl}}/manga/{{$.Manga.Url}}/{{$chapter.Number}}" method="POST" enctype="multipart/form-data">
+                  <input type="text" name="action" value="addPages" hidden>
+                  <input type="file" name="file" multiple="multiple">
+                  <input type="submit" value="Add Pages">
+                </form>
+                <form target="dummyframe" action="http://api.{{$.PublicUrl}}/manga/{{$.Manga.Url}}/{{$chapter.Number}}" method="POST" enctype="multipart/form-data">
+                  <input type="text" name="action" value="removePages" hidden>
+                  <input type="submit" value="Remove Pages">
+                </form>                 
               </td>
             </tr>
             {{end}}

@@ -2,15 +2,16 @@ package main
 
 import (
 	"fmt"
-	"github.com/SemenchenkoVitaliy/project-42/common"
 	"github.com/SemenchenkoVitaliy/project-42/servers/apiserver"
 	"github.com/SemenchenkoVitaliy/project-42/servers/fileserver"
 	"github.com/SemenchenkoVitaliy/project-42/servers/httpserver"
 	"github.com/SemenchenkoVitaliy/project-42/servers/lbserver"
+	"github.com/SemenchenkoVitaliy/project-42/utils"
 )
 
 func main() {
-	switch common.Config.Server {
+	utils.LoadConfig("./configs")
+	switch utils.ServerType {
 	case "api":
 		apiserver.Start()
 	case "file":
@@ -20,6 +21,6 @@ func main() {
 	case "lb":
 		lbserver.Start()
 	default:
-		common.LogCritical(fmt.Errorf("Incorrect server type: "+common.Config.Server), "Launch server")
+		utils.LogCritical(fmt.Errorf("Incorrect server type: "+utils.ServerType), "Launch server")
 	}
 }

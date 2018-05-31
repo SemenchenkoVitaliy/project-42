@@ -28,13 +28,14 @@
 
         <div class="Product">
           <a href="/manga/{{.Url}}">
-            {{range $title := .Titles}}<img src="{{$title}}" alt="">{{end}}
+            {{range $cover := .Covers}}<img src="{{$cover}}" alt="">{{end}}
           </a>
         </div>
 
         <div class="Info">
+          {{if .Chapters}}
+          {{$firstChapter := index .Chapters 0}}
           <p>
-            {{$firstChapter := index .Chapters 0}}
             <a href="/manga/{{.Url}}/{{$firstChapter.Number}}">Read first chapter</a>
           </p>
           <p>
@@ -43,6 +44,7 @@
           <p id="pLV" style="display:none">
             <a id="aLV" href="#">Continue reading</a>
           </p>
+          {{end}}
         </div>
 
       </div>

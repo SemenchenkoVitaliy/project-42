@@ -1,0 +1,24 @@
+{
+  "TCP": {
+    "IP": "127.0.0.1",
+    "port": 9000,
+    "certPath": "./configs/certs/cert.pem",
+    "keyPath":  "./configs/certs/key.pem",
+    "bufSize": 1024
+  },
+
+  "DB": {
+    "IP": "127.0.0.1",
+    "port": 27017,
+    "dbName": "project42",
+    "user": "user",
+    "password": "qwerty"
+  },
+  
+  "IP": "127.0.0.1",
+  "port": 8080,
+  "serverId": 0,
+  "logsDir": "./logs",
+  "publicUrl": "localhost:8080",
+  "srcDir": "/home/vitaliy/Documents/Sources/"
+}

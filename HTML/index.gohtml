@@ -1,4 +1,4 @@
-{{define "main"}}
+{{define "index"}}
 <!DOCTYPE html>
 <html>
 <head>
@@ -16,6 +16,17 @@
         </a>
       </center>
     </div>
+    <div class="User">
+      {{if ne .UserName ""}}
+        <span>Hello, {{.UserName}}!</span>
+        <span class="Button"><a href="/logout">Log out</a></span>
+        {{if ne .Rights 0}}
+        <span class="Button"><a href="/admin">Admin</a></span>
+        {{end}}
+      {{else}}
+        <span class="Button"><a href="/login">Log in</a></span>
+      {{end}}
+    </div>
 
     <div class="Content">
 
@@ -27,7 +38,7 @@
         {{range $key := .Manga}}
           <div class="Product">
             <a href="/manga/{{$key.Url}}">
-            {{range $title := $key.Titles}}<img src="{{$title}}" alt="">{{end}}
+            {{range $cover := $key.Covers}}<img src="{{$cover}}" alt="">{{end}}
             <p>{{$key.Name}}</p>
             </a>
           </div>
@@ -42,7 +53,7 @@
         {{range $key := .Ranobe}}
           <div class="Product">
             <a href="/manga/{{$key.Url}}">
-            {{range $title := $key.Titles}}<img src="{{$title}}" alt="">{{end}}
+            {{range $cover := $key.Covers}}<img src="{{$cover}}" alt="">{{end}}
             <p>{{$key.Name}}</p>
             </a>
           </div>

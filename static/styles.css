@@ -11,21 +11,43 @@ html, body, div, span, h1, h2, h3, h4, h5, h6, p, a, ul, li {
 body {
   background-color: #f4f4f4;
 }
+
+@media screen and (max-width: 870px) {
+  .Header{
+    padding-bottom: 40px;
+  }
+  .User{
+    margin-top: 40px;
+  }
+}
+
+@media screen and (min-width: 870px) {
+  .Header{
+    padding-bottom: 5px;
+  }
+  .User{
+    margin-top: 10px;
+  }
+}
+
+
 .Header{
   border: 1px solid #888;
   border-radius: 10px;
-  padding: 5px;
+  padding-top: 5px;
   margin-top: 10px;
   margin-bottom: 10px;
   background-color: white;
   font-size: 20px;
 }
+
 .Header a{
   margin: 10px;
   margin-right: 0px;
   text-decoration: none;
   color: black;
 }
+
 .Footer{
   font-size: 12px;
   text-align: center;
@@ -79,6 +101,7 @@ body {
   max-height: 400px;
   margin-left: auto;
   margin-right: auto;
+  width: auto;
 }
 
 .Product p{
@@ -142,6 +165,23 @@ body {
   background-color: white;
 }
 
+.User{
+  padding: 5px;
+  margin-bottom: 10px;
+  font-size: 20px;
+  position: absolute;
+  top: 0px;
+  right: 0px;
+}
+
+.User a {
+  color: black;
+  text-decoration: none;
+  border-radius: 3px;
+  border: 1px solid #888;
+  padding: 2px;
+}
+
 .Menu div{
   display: inline;
 }
@@ -149,4 +189,24 @@ body {
 .ImageDisplay img{
   display: none;
   width: auto;
+}
+
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+  padding: 5px;
+  text-align: left;
+  margin: 10px;
+}
+
+th, td {
+  max-width: 450px;
+}
+
+form{
+  padding: 10px;
+}
+
+img{
+  width: 100px;
 }
