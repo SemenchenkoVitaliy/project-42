@@ -1,0 +1,58 @@
+{{define "admin"}}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link href="/static/styles.css" rel="stylesheet">
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+  <script src="/static/adminScript.js" charset="utf-8"></script>
+  <title>Noname site</title>
+</head>
+  <body onload="onload()">
+    <div class="Header">
+      <center>
+        <a href="/">
+          <span>Noname site ¯\_(ツ)_/¯</span>
+        </a>
+      </center>
+    </div>
+    <div class="User">
+      <span>Hello, {{.UserName}}!</span>
+      <span class="Button"><a href="/logout">Log out</a></span>
+    </div>
+    <div class="Content">
+      <iframe name="dummyframe" hidden></iframe>
+      <div>
+        <form target="dummyframe" action="http://api.{{$.PublicUrl}}/manga" method="POST" enctype="multipart/form-data">
+          <input type="url" name="url" value="" placeholder="http://">
+          <input type="text" name="action" value="add" hidden>
+          <input type="submit" value="Add manga from site">
+        </form>
+        <form target="dummyframe" action="http://api.{{$.PublicUrl}}/manga" method="POST" enctype="multipart/form-data">
+          <input type="test" name="name" value="" placeholder="Manga Name">
+          <input type="text" name="action" value="addManual" hidden>
+          <input type="submit" value="Add manga manually">
+        </form>
+        <form target="dummyframe" action="http://api.{{$.PublicUrl}}/" method="POST" enctype="multipart/form-data">
+          <input type="text" name="action" value="reloadHtml" hidden>
+          <input type="submit" value="Update Html on HTTP servers">
+        </form>
+      </div>
+      <div>
+        <table>
+          <thead>
+            <th>Manga</th>
+          </thead>
+          <tbody>
+            {{range $manga := $.Manga}}
+            <tr>
+              <td><a href="/admin/manga/{{$manga.Url}}">{{$manga.Name}}</a></td>
+            </tr>
+            {{end}}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </body>
+</html>
+{{end}}

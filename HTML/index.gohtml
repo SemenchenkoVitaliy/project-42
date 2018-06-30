@@ -1,0 +1,73 @@
+{{define "index"}}
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link href="/static/styles.css" rel="stylesheet">
+  <link rel="icon" href="/static/favicon.ico" type="image/x-icon">
+  <script src="/static/mainScript.js" charset="utf-8"></script>
+  <title>Noname site</title>
+</head>
+  <body onload="start()">
+    <div class="Header">
+      <center>
+        <a href="/">
+          <span>Noname site ¯\_(ツ)_/¯</span>
+        </a>
+      </center>
+    </div>
+    <div class="User">
+      {{if ne .UserName ""}}
+        <span>Hello, {{.UserName}}!</span>
+        <span class="Button"><a href="/logout">Log out</a></span>
+        {{if ne .Rights 0}}
+        <span class="Button"><a href="/admin">Admin</a></span>
+        {{end}}
+      {{else}}
+        <span class="Button"><a href="/login">Log in</a></span>
+      {{end}}
+    </div>
+
+    <div class="Content">
+
+      <div class="SectionName">
+        <a href="/manga">Manga</a>
+      </div>
+
+      <div class="Section">
+        {{range $key := .Manga}}
+          <div class="Product">
+            <a href="/manga/{{$key.Url}}">
+            {{range $cover := $key.Covers}}<img src="{{$cover}}" alt="">{{end}}
+            <p>{{$key.Name}}</p>
+            </a>
+          </div>
+        {{end}}
+      </div>
+
+      <div class="SectionName">
+        <a href="/ranobe">Ranobe</a>
+      </div>
+
+      <div class="Section">
+        {{range $key := .Ranobe}}
+          <div class="Product">
+            <a href="/manga/{{$key.Url}}">
+            {{range $cover := $key.Covers}}<img src="{{$cover}}" alt="">{{end}}
+            <p>{{$key.Name}}</p>
+            </a>
+          </div>
+        {{end}}
+      </div>
+
+    </div>
+
+    <div class="Footer">
+      <p>Copyrights and trademarks for the manga, ranobe and other
+        promotional materials are the property of their
+        respective owners. Use of these materials are allowed
+        under the fair use clause of the Copyright Law</p>
+    </div>
+  </body>
+</html>
+{{end}}
