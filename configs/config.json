@@ -20,5 +20,5 @@
   "serverId": 0,
   "logsDir": "./logs",
   "publicUrl": "localhost:8080",
-  "srcDir": "/home/vitaliy/Documents/Sources/"
+  "srcDir": "/home/vitaliy/Documents/Sources"
 }

@@ -27,7 +27,8 @@ type ServerInfo struct {
 // ServerInfoC enhances SererInfo with purpuse to be used in balancing algorithm
 // which relies on number of connections to worker servers
 type ServerInfoC struct {
-	ServerInfo
+	Info        netutils.AuthData
+	Server      netutils.Server
 	connections int
 }
 

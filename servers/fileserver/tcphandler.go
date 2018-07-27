@@ -29,6 +29,7 @@ func tcpHandler(server netutils.Server) {
 			utils.LogCritical(err, "unable to recieve a message from server")
 			return
 		}
+
 		switch dataType {
 		case 0:
 			continue
@@ -39,19 +40,20 @@ func tcpHandler(server netutils.Server) {
 				utils.Log(err, "encode file to write")
 				continue
 			}
-			if err = ioutil.WriteFile(utils.Config.SrcDir+"/"+fileData.Path, fileData.Data, 0777); err != nil {
+			filePath := utils.Config.SrcDir + fileData.Path
+			if err = ioutil.WriteFile(filePath, fileData.Data, 0777); err != nil {
 				dir := utils.Config.SrcDir
 				arr := strings.Split(fileData.Path, "/")
 				for i := 0; i < len(arr)-1; i++ {
 					dir += "/" + arr[i]
 					os.Mkdir(dir, 0777)
 				}
-				if err = ioutil.WriteFile(utils.Config.SrcDir+"/"+fileData.Path, fileData.Data, 0777); err != nil {
-					utils.Log(err, "write file: "+utils.Config.SrcDir+"/"+fileData.Path)
+				if err = ioutil.WriteFile(filePath, fileData.Data, 0777); err != nil {
+					utils.Log(err, "write file: "+filePath)
 					continue
 				}
 			}
-			ioutil.WriteFile(utils.Config.SrcDir+"/"+fileData.Path, fileData.Data, 0777)
+			ioutil.WriteFile(filePath, fileData.Data, 0777)
 		case 3:
 			dir := string(data)
 			err = os.Mkdir(utils.Config.SrcDir+dir, 0777)

@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"sync"
 
 	dbDriver "github.com/SemenchenkoVitaliy/project-42/dbDriver/mongo"
 	"github.com/SemenchenkoVitaliy/project-42/netutils"
@@ -26,8 +27,9 @@ func Init(server *netutils.Server, database *dbDriver.Database) {
 // load makes http GET request
 //
 // It accepts url and returns data body, loaded by this url
-func load(url string) (body string, err error) {
+func load(url string) (body []byte, err error) {
 	resp, err := http.Get(url)
+	defer resp.Body.Close()
 	if err != nil {
 		return body, err
 	}
@@ -35,8 +37,7 @@ func load(url string) (body string, err error) {
 	if err != nil {
 		return body, err
 	}
-	resp.Body.Close()
-	return string(bytes), err
+	return bytes, err
 }
 
 // loadChapter loads page html, parses it for images urls and loads those images
@@ -44,31 +45,31 @@ func load(url string) (body string, err error) {
 // It accepts url of page and directory path to load images into, returns slice
 // of images filenames and error if any
 func loadChapter(url, dir string) (imageNames []string, err error) {
-	var name string
-	body, _ := load(url)
-	imagesUrls := parseChapter(url, body)
-	imageNames = make([]string, 0, len(imagesUrls))
+	body, err := load(url)
+	if err != nil {
+		panic(err)
+	}
+	imagesUrls := parseChapter(url, string(body))
+	imageNames = make([]string, len(imagesUrls))
 
-	for _, item := range imagesUrls {
-		name = item[strings.LastIndex(item, "/")+1:]
+	var wg sync.WaitGroup
+	wg.Add(len(imagesUrls))
 
-		resp, err := http.Get(item)
-		defer resp.Body.Close()
-		if err != nil {
-			utils.Log(err, fmt.Sprintf("get http page: %v", item))
-			continue
-		}
+	for index, imageUrl := range imagesUrls {
+		go func(index int, url string) {
+			data, err := load(url)
+			if err != nil {
+				utils.Log(err, fmt.Sprintf("load http page: %v", url))
+				return
+			}
 
-		bytes, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			utils.Log(err, fmt.Sprintf("convert http page to byte slice: %v", item))
-			continue
-		}
-
-		mainServer.WriteFile(dir+name, bytes)
-		imageNames = append(imageNames, name)
+			imageNames[index] = url[strings.LastIndex(url, "/")+1:]
+			mainServer.WriteFile(dir+imageNames[index], data)
+			wg.Done()
+		}(index, imageUrl)
 	}
 
+	wg.Wait()
 	return imageNames, err
 }
 
@@ -83,10 +84,13 @@ func UpdateManga(mangaName string) (err error) {
 		return fmt.Errorf("No source url")
 	}
 
-	body, _ := load(manga.SrcUrl)
-	chapters := parseChapters(manga.SrcUrl, body)[manga.Size:]
+	body, err := load(manga.SrcUrl)
+	if err != nil {
+		return err
+	}
+	chapters := parseChapters(manga.SrcUrl, string(body))[manga.Size:]
 	for index, item := range chapters {
-		images, err := loadChapter(item.Url, fmt.Sprintf("/images/manga/%v/%v/", mangaName, index))
+		images, err := loadChapter(item.Url, fmt.Sprintf("/images/manga/%v/%v/", mangaName, manga.Size+index))
 		if err != nil {
 			return err
 		}
